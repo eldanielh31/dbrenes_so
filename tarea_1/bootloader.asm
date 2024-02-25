@@ -1,5 +1,5 @@
 org 0x7c00 ; indica la posicion de memoria donde estara el codigo
-define SECTOR_AMOUNT 0x4 ; SEctores que abarcara el software, 1 sector equivale a 512bytes
+SECTOR_AMOUNT equ 0x4 ; Sectores que abarcara el software, 1 sector equivale a 512bytes
 jmp short start
 
 
@@ -12,7 +12,7 @@ mov ss, ax
 mov es, ax
 mov fs, ax
 mov gs, ax
-mov sp, 0x6efo ; se coloca el stack pointer a una posicion, en este ejemplo es el mismo que quemu
+mov sp, 0x6ef0 ; se coloca el stack pointer a una posicion, en este ejemplo es el mismo que quemu
 sti ;habilita interrupciones
 
 mov ah, 0 ;se resetea el modo del disco
