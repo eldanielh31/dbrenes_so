@@ -30,12 +30,15 @@ move_player:
 .right:
   mov al, MOVE_RIGHT
   call move
+  jmp .check
 .up:
   mov al, MOVE_UP
   call move
+  jmp .check
 .down:
   mov al, MOVE_DOWN
   call move
+  jmp .check
 .check:
   call check_bullet_collisions
   mov [player_pos], dx
