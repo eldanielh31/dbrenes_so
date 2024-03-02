@@ -13,6 +13,10 @@ move_player:
   je .left
   cmp al, MOVE_RIGHT_KEY
   je .right
+  cmp al, MOVE_UP_KEY
+  je .up
+  cmp al, MOVE_DOWN_KEY
+  je .down
   cmp al, SHOOT_KEY
   je .shoot
   jmp .check
@@ -25,6 +29,12 @@ move_player:
   jmp .check
 .right:
   mov al, MOVE_RIGHT
+  call move
+.up:
+  mov al, MOVE_UP
+  call move
+.down:
+  mov al, MOVE_DOWN
   call move
 .check:
   call check_bullet_collisions

@@ -1,7 +1,7 @@
 ; constants
 org 0x8000
 ; GAME WINDOW PARAMETERS
-%define GAME_WIDTH 27
+%define GAME_WIDTH 33
 %define GAME_HEIGHT 25
 
 ; GAME PARAMETERES
@@ -37,8 +37,11 @@ org 0x8000
 ; PLAY KEYS
 %define START_KEY ' '
 %define RETRY_KEY 'r'
-%define MOVE_LEFT_KEY 'a'
-%define MOVE_RIGHT_KEY 'd'
+
+%define MOVE_LEFT_KEY 'f' 
+%define MOVE_RIGHT_KEY 'h'
+%define MOVE_UP_KEY 't'
+%define MOVE_DOWN_KEY 'g'
 %define SHOOT_KEY ' '
 
 ; MOVE DIRECTIONS
@@ -234,27 +237,29 @@ end:
 
 
 ; window
-window_bar db "######################", 0
-window_space db "#                    #", 0
+window_bar db "############################", 0
+window_space db "#                          #", 0
 
 ; intro
-intro_string_t db "#   SPACE INVADERS   #", 0
-intro_string_o db "#   SPACE to start   #", 0
+intro_string_t db "#       MICRO MUNDOS       #", 0
+intro_string_o db "#   Press SPACE to start   #", 0
 
 ; select difficulty level
-select_difficulty_string db "#  Select difficulty #", 0
-easy_level_string        db "#  1     Easy        #", 0
-medium_level_string      db "#  2    Medium       #", 0
-hard_level_string        db "#  3     Hard        #", 0
+select_difficulty_string db "#     Select difficulty    #", 0
+easy_level_string        db "#     1     Easy           #", 0
+medium_level_string      db "#     2    Medium          #", 0
+hard_level_string        db "#     3     Hard           #", 0
 
 ; end
-end_string_w db "#    PLAYER  wins    #", 0
-end_string_l db "#    INVADERS win    #", 0
-end_string_o db "# Press R to restart #", 0
+end_string_w db "#       PLAYER  wins       #", 0
+end_string_l db "#       INVADERS win       #", 0
+end_string_o db "#    Press R to restart    #", 0
 
 ; controls
-left_string db "A = move left", 0
-right_string db "D = move right", 0
+left_string db "F = move left", 0
+right_string db "H = move right", 0
+up_string db "T = move up", 0
+down_string db "G = move down", 0
 shoot_string db "SPACE = shoot", 0
 
 

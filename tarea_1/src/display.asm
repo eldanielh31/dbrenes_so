@@ -122,6 +122,7 @@ print_string:
   pop ax
   ret
 
+; print keys to screen
 render_controlls:
   push si
   push dx
@@ -132,6 +133,12 @@ render_controlls:
   call print_string
   inc dh
   mov si, right_string
+  call print_string
+  inc dh
+  mov si, up_string
+  call print_string
+  inc dh
+  mov si, down_string
   call print_string
   inc dh
   mov si, shoot_string

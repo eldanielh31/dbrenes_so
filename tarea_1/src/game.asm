@@ -82,6 +82,8 @@ move:
   je .down
   cmp al, MOVE_LEFT
   je .left
+  cmp al, MOVE_UP
+  je .up
 .up:
   cmp dh, 0
   jle .done
