@@ -17,14 +17,26 @@ move_player:
   je .up
   cmp al, MOVE_DOWN_KEY
   je .down
+  
+  cmp al, MOVE_LEFT_UP_KEY
+  je .left_up
+  cmp al, MOVE_LEFT_DOWN_KEY
+  je .left_down
+  cmp al, MOVE_RIGHT_UP_KEY
+  je .right_up
+  cmp al, MOVE_RIGHT_DOWN_KEY
+  je .right_down
+
   cmp al, SHOOT_KEY
   je .shoot
   jmp .check
+
 .shoot:
   cmp byte [player_can_shoot], 0
   je .switch_shoot
   mov byte [player_can_shoot], 0
   jmp .check
+  
 .left:
   mov al, MOVE_LEFT
   call move
@@ -41,6 +53,24 @@ move_player:
   mov al, MOVE_DOWN
   call move
   jmp .make_shoot
+
+.left_up:
+  mov al, MOVE_LEFT_UP
+  call move
+  jmp .make_shoot
+.left_down:
+  mov al, MOVE_LEFT_DOWN
+  call move
+  jmp .make_shoot
+.right_up:
+  mov al, MOVE_RIGHT_UP
+  call move
+  jmp .make_shoot
+.right_down:
+  mov al, MOVE_RIGHT_DOWN
+  call move
+  jmp .make_shoot
+
 .switch_shoot:
   mov byte [player_can_shoot], 1
 .make_shoot:

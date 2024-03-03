@@ -68,6 +68,16 @@ move:
   je .left
   cmp al, MOVE_UP
   je .up
+
+  cmp al, MOVE_LEFT_UP
+  je .left_up
+  cmp al, MOVE_LEFT_DOWN
+  je .left_down
+  cmp al, MOVE_RIGHT_UP
+  je .right_up
+  cmp al, MOVE_RIGHT_DOWN
+  je .right_down
+
 .up:
   cmp dh, 1
   jle .done
@@ -87,5 +97,43 @@ move:
   cmp dl, GAME_WIDTH - 1
   jge .done
   add	word dx, 0x0001
+  jmp .done
+
+.left_up:
+  cmp dl, 1
+  jle .done
+  sub	word dx, 0x0001
+  cmp dh, 1
+  jle .done
+  sub	word dx, 0x0100
+  jmp .done
+
+.left_down:
+  cmp dl, 1
+  jle .done
+  sub	word dx, 0x0001
+  cmp dh, GAME_HEIGHT - 1
+  jge .done
+  add	word dx, 0x0100
+	jmp .done
+  
+.right_up:
+  cmp dl, GAME_WIDTH - 1
+  jge .done
+  add	word dx, 0x0001
+  cmp dh, 1
+  jle .done
+  sub	word dx, 0x0100
+  jmp .done
+
+.right_down:
+  cmp dl, GAME_WIDTH - 1
+  jge .done
+  add	word dx, 0x0001
+  cmp dh, GAME_HEIGHT - 1
+  jge .done
+  add	word dx, 0x0100
+	jmp .done
+
 .done:
   ret

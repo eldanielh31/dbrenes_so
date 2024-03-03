@@ -39,6 +39,12 @@ org 0x8000
 %define MOVE_RIGHT_KEY 'l'
 %define MOVE_UP_KEY 'i'
 %define MOVE_DOWN_KEY 'k'
+
+%define MOVE_LEFT_UP_KEY 'q'
+%define MOVE_LEFT_DOWN_KEY 'a'
+%define MOVE_RIGHT_UP_KEY 'e'
+%define MOVE_RIGHT_DOWN_KEY 'd'
+
 %define SHOOT_KEY ' '
 
 ; MOVE DIRECTIONS
@@ -46,7 +52,13 @@ org 0x8000
 %define MOVE_RIGHT 1
 %define MOVE_DOWN 2
 %define MOVE_LEFT 3
-%define MOVE_RESET 4
+
+%define MOVE_LEFT_UP 4
+%define MOVE_LEFT_DOWN 5
+%define MOVE_RIGHT_UP 6
+%define MOVE_RIGHT_DOWN 7
+
+%define MOVE_RESET 8
 
 ; BULLET
 %define BULLET_STATUS_END_OF_LIST 0
@@ -225,13 +237,22 @@ end_string_l db "#        YOU LOOSE         #", 0
 end_string_o db "#    Press R to restart    #", 0
 
 ; controls
-left_string db "J = move left", 0
-right_string db "L = move right", 0
-up_string db "I = move up", 0
-down_string db "K = move down", 0
-shoot_string db "SPACE = print", 0
-counter_string1 db "Time left: ", 0
-counter_string2 db " ", 0
+space_string db " ", 0 
+
+movement_string db " Movement:", 0 
+left_string db " J = move left", 0
+right_string db " L = move right", 0
+up_string db " I = move up", 0
+down_string db " K = move down", 0
+
+left_up_string db " Q = move left up", 0
+left_down_string db " A = move left down", 0
+right_up_string db " E = move right up", 0
+right_down_string db " D = move right down", 0
+
+shoot_string db " SPACE = print", 0
+time_string db " Time left: ", 0
+counter_string db " ", 0
 
 section .data
   newline db 0xA ; newline character

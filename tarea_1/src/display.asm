@@ -129,6 +129,15 @@ render_controlls:
   mov bl, FG_LIGHT_GRAY
   add bl, BG_BLACK
   mov dx, 0x0000
+
+  ; print movemente
+  mov si, space_string
+  call print_string
+  inc dh
+  mov si, movement_string
+  call print_string
+  inc dh
+
   mov si, left_string
   call print_string
   inc dh
@@ -141,21 +150,50 @@ render_controlls:
   mov si, down_string
   call print_string
   inc dh
+
+  mov si, space_string
+  call print_string
+  inc dh
+
+  mov si, left_up_string
+  call print_string
+  inc dh
+  mov si, left_down_string
+  call print_string
+  inc dh
+  mov si, right_up_string
+  call print_string
+  inc dh
+  mov si, right_down_string
+  call print_string
+  inc dh
+  
+  mov si, space_string
+  call print_string
+  inc dh
+
+  ; print shoot
   mov si, shoot_string
   call print_string
   inc dh
 
-  mov si, counter_string1
+  mov si, space_string
   call print_string
   inc dh
 
+  ; print time
+  mov si, time_string
+  call print_string
+  inc dh
+
+  ; print time value
   ; Convert the value of the counter to a string
   lea si, [counter]
   lea di, buffer
   ; call itoa
 
   ; Print the string
-  lea si, counter_string2
+  lea si, counter_string
   call print_string
   lea si, buffer
   call print_string
