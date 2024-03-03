@@ -21,25 +21,33 @@ move_player:
   je .shoot
   jmp .check
 .shoot:
-  mov ah, [player_is_shooting]
-  call create_player_bullet
+  cmp byte [player_can_shoot], 0
+  je .switch_shoot
+  mov byte [player_can_shoot], 0
   jmp .check
 .left:
   mov al, MOVE_LEFT
   call move
-  jmp .check
+  jmp .make_shoot
 .right:
   mov al, MOVE_RIGHT
   call move
-  jmp .check
+  jmp .make_shoot
 .up:
   mov al, MOVE_UP
   call move
-  jmp .check
+  jmp .make_shoot
 .down:
   mov al, MOVE_DOWN
   call move
-  jmp .check
+  jmp .make_shoot
+.switch_shoot:
+  mov byte [player_can_shoot], 1
+.make_shoot:
+  cmp byte [player_can_shoot], 0
+  je .check
+.true_shoot:
+  call create_player_bullet
 .check:
   call check_bullet_collisions
   mov [player_pos], dx

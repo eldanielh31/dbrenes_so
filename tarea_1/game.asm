@@ -23,8 +23,8 @@ org 0x8000
 ; INVADERS DIFFICULTY LEVEL (invaders shoot cycles)
 %define INVADERS_EASY_LEVEL 6
 
-; PLAYER SHOOTING INITIAL STATE (player_is_shooting)
-%define PLAYER_IS_SHOOTING 0
+; PLAYER SHOOTING INITIAL STATE (PLAYER_CAN_SHOOT)
+%define PLAYER_CAN_SHOOT_GLOBAL 0
 
 ; GAME STATES
 %define GAME_STATE_PLAYING 0
@@ -150,8 +150,8 @@ intro:
 select_difficulty_level:
   je .easy_level
 .easy_level:
+  mov byte [player_can_shoot], PLAYER_CAN_SHOOT_GLOBAL
   mov byte [invaders_shoot_cycles], INVADERS_EASY_LEVEL
-  mov byte [player_is_shooting], PLAYER_IS_SHOOTING
   jmp .done
 .done:
   ret
@@ -250,13 +250,13 @@ segment .bss
   game_state resb 1
 
   ; game counter
-  counter resd 1
+  counter resb 1
   buffer resb 4    ; Reserve space for the converted string
 
   ; player
   player_pos resw 1
 
-  player_is_shooting resb 1
+  player_can_shoot resb 1
 
   invaders_shoot_cycles resb 1
 

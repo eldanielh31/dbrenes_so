@@ -6,7 +6,7 @@ init_game:
   mov word [player_pos], 0x0915
 
   ; initialize game counter
-  mov dword [counter], 15  ;0x3C = 60
+  mov byte [counter], 15  ;0x3C = 60
 
   ; initialize the bullets
   mov byte [bullet_list], 0

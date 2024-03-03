@@ -145,10 +145,6 @@ render_controlls:
   call print_string
   inc dh
 
-  mov si, player_is_shooting
-  call print_string
-  inc dh
-
   mov si, counter_string1
   call print_string
   inc dh
@@ -174,27 +170,23 @@ render_controlls:
 
 itoa:
     mov eax, [si]      ; Get the value of the counter
-    mov ebx, 10        ; Divisor for extracting digits
-    xor ecx, ecx       ; Initialize the digit counter
-    mov edi, 10        ; Initialize the divisor for the first digit
-    mov esi, 0         ; Initialize the digit accumulator
+    mov ecx, 10        ; Divisor for extracting digits
+    mov edi, buffer    ; Destination buffer
+    add edi, 3         ; Point to the end of the buffer
 
 reverseLoop:
-    div ebx            ; Divide eax by 10, quotient in eax, remainder in edx
+    xor edx, edx       ; Clear any previous remainder
+    div ecx            ; Divide eax by 10, quotient in eax, remainder in edx
     add dl, '0'        ; Convert the digit to ASCII
-    push edx           ; Push the digit onto the stack
-    inc ecx            ; Increment the digit counter
-    cmp eax, 0         ; Check if we have reached 0
+    dec edi            ; Move the destination pointer backward
+    mov [edi], dl      ; Store the digit in the buffer
+    test eax, eax      ; Check if quotient is zero
     jnz reverseLoop    ; If not, repeat the loop
 
-    ; Pop and print the digits in reverse order
-    mov eax, 4         ; System call for sys_write
-    mov ebx, 1         ; File descriptor: 1 for stdout
-    mov edx, ecx       ; Length of the text to print
-    lea ecx, [esp]     ; Pointer to the digit string on the stack
-    int 0x80           ; System interrupt to print
-
-    ; Clean up the stack after printing
-    add esp, ecx
+    ; Copy the result to the beginning of the buffer
+    lea si, [edi]
+    lea di, buffer
+    mov ecx, 4         ; Length of the string, including null terminator
+    rep movsb
 
     ret
