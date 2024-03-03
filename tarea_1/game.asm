@@ -4,16 +4,12 @@ org 0x8000
 %define GAME_WIDTH 33
 %define GAME_HEIGHT 25
 
-; GAME PARAMETERES
-%define NUM_INVADERS 12
-%define INVADERS_MOVE_CYCLES 40
-%define BULLETS_MOVE_CYCLE 28
 
 ; SPECIAL CONSTANT
 %define INVALID_STATE 0x0000
 
 ; ICONS
-%define ICON_PLAYER 'M'
+%define ICON_PLAYER 232
 %define ICON_INVADER 'T'
 %define ICON_BULLET '|'
 %define ICON_EXPLOSION_BULLET '#'
@@ -26,6 +22,9 @@ org 0x8000
 
 ; INVADERS DIFFICULTY LEVEL (invaders shoot cycles)
 %define INVADERS_EASY_LEVEL 6
+
+; PLAYER SHOOTING INITIAL STATE (player_is_shooting)
+%define PLAYER_IS_SHOOTING 0
 
 ; GAME STATES
 %define GAME_STATE_PLAYING 0
@@ -60,11 +59,6 @@ org 0x8000
 %define BULLET_POSITION_OFFSET BULLET_STATUS_OFFSET + BULLET_STATUS_SIZE
 %define BULLET_POSITION_SIZE 2
 %define BULLET_SIZE BULLET_POSITION_OFFSET + BULLET_POSITION_SIZE
-
-; INVADER
-%define INVADER_POSITION_OFFSET 0
-%define INVADER_POSITION_SIZE 2
-%define INVADER_SIZE INVADER_POSITION_OFFSET + INVADER_POSITION_SIZE
 
 ; COLOR
 %define FG_BLACK          00000000b
@@ -122,7 +116,6 @@ jmp main
 %include "./src/game.asm"
 
 %include "./src/bullets.asm"
-; %include "./src/invaders.asm"
 %include "./src/player.asm"
 %include "./src/arena.asm"
 
@@ -158,6 +151,7 @@ select_difficulty_level:
   je .easy_level
 .easy_level:
   mov byte [invaders_shoot_cycles], INVADERS_EASY_LEVEL
+  mov byte [player_is_shooting], PLAYER_IS_SHOOTING
   jmp .done
 .done:
   ret
@@ -172,16 +166,15 @@ game:
   call check_key
 
   ; move
-  call move_bullets
+  ; call move_bullets
   call move_player
-  ; call move_invaders
 
   ; render
   call clear_screen
   call render_arena
   call render_bullets
   call render_player
-  ; call render_invaders
+
   call render_controlls
 
   ; update to game state
@@ -228,7 +221,7 @@ intro_string_o db "#   Press SPACE to start   #", 0
 
 ; end
 end_string_w db "#       PLAYER  wins       #", 0
-end_string_l db "#       INVADERS win       #", 0
+end_string_l db "#        YOU LOOSE         #", 0
 end_string_o db "#    Press R to restart    #", 0
 
 ; controls
@@ -237,7 +230,11 @@ right_string db "L = move right", 0
 up_string db "I = move up", 0
 down_string db "K = move down", 0
 shoot_string db "SPACE = print", 0
+counter_string1 db "Time left: ", 0
+counter_string2 db " ", 0
 
+section .data
+  newline db 0xA ; newline character
 
 segment .bss
   ; display properties
@@ -252,15 +249,15 @@ segment .bss
   ; 2: invaders win
   game_state resb 1
 
+  ; game counter
+  counter resd 1
+  buffer resb 4    ; Reserve space for the converted string
+
   ; player
   player_pos resw 1
-  ; invaders
 
-  ; invaders resw NUM_INVADERS
-  ; num_invaders_alive resb 1
-  ; invaders_move_direction resb 1
-  ; invaders_move_cycle resb 1
-  ; invaders_shoot_cycle resb 1
+  player_is_shooting resb 1
+
   invaders_shoot_cycles resb 1
 
   ; bullets:  0x STATUS PY PX
@@ -268,8 +265,6 @@ segment .bss
   ; STATUS == #: explosion
   ; STATUS == p: player bullet
   ; STATUS == i: invader bullet
-
-  bullets_move_cycle resb 1
 
   bullet_list_end resw 1
   bullet_list resb 1

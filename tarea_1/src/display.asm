@@ -143,6 +143,58 @@ render_controlls:
   inc dh
   mov si, shoot_string
   call print_string
+  inc dh
+
+  mov si, player_is_shooting
+  call print_string
+  inc dh
+
+  mov si, counter_string1
+  call print_string
+  inc dh
+
+  ; Convert the value of the counter to a string
+  lea si, [counter]
+  lea di, buffer
+  ; call itoa
+
+  ; Print the string
+  lea si, counter_string2
+  call print_string
+  lea si, buffer
+  call print_string
+
+  ; Print a newline
+  ;lea si, newline
+  ;call print_string
+
   pop dx
   pop si
   ret
+
+itoa:
+    mov eax, [si]      ; Get the value of the counter
+    mov ebx, 10        ; Divisor for extracting digits
+    xor ecx, ecx       ; Initialize the digit counter
+    mov edi, 10        ; Initialize the divisor for the first digit
+    mov esi, 0         ; Initialize the digit accumulator
+
+reverseLoop:
+    div ebx            ; Divide eax by 10, quotient in eax, remainder in edx
+    add dl, '0'        ; Convert the digit to ASCII
+    push edx           ; Push the digit onto the stack
+    inc ecx            ; Increment the digit counter
+    cmp eax, 0         ; Check if we have reached 0
+    jnz reverseLoop    ; If not, repeat the loop
+
+    ; Pop and print the digits in reverse order
+    mov eax, 4         ; System call for sys_write
+    mov ebx, 1         ; File descriptor: 1 for stdout
+    mov edx, ecx       ; Length of the text to print
+    lea ecx, [esp]     ; Pointer to the digit string on the stack
+    int 0x80           ; System interrupt to print
+
+    ; Clean up the stack after printing
+    add esp, ecx
+
+    ret

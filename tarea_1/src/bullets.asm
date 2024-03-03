@@ -1,77 +1,4 @@
 ; ******************************************************
-;  * move
-;  *****************************************************
-move_bullets:
-  cmp byte [bullets_move_cycle], BULLETS_MOVE_CYCLE  ; only move the bullets every 28 frames
-  je .move
-  inc byte [bullets_move_cycle]  ; increase the counter
-  jmp .ret
-.move:
-  push di
-
-  mov byte [bullets_move_cycle], 0  ; reset the counter
-
-  ; delete bullets that are exploded or out of the screen
-  mov di, _check_and_delete_bullet
-  call _iterate_bullets
-
-  ; move all bullets
-  mov di, _move_bullet
-  call _iterate_bullets
-
-  pop di
-.ret:
-  ret
-
-; move a single bullet
-; SI bullet pointer
-_move_bullet:
-  push ax
-  push dx
-  mov al, [si]      ; load status
-  mov dx, [si + BULLET_POSITION_OFFSET]  ; load position
-  cmp al, BULLET_STATUS_PLAYER
-  je .player
-  cmp al, BULLET_STATUS_INVADER
-  je .invader
-  jmp .done
-.player:
-  mov al, MOVE_UP
-  jmp .move
-.invader:
-  mov al, MOVE_DOWN
-.move:
-  call move
-  mov [si + BULLET_POSITION_OFFSET], dx  ; save new position
-.done:
-  pop dx
-  pop ax
-  ret
-
-; delete bullets that are out of the screen or exploded
-; SI bullet pointer
-_check_and_delete_bullet:
-  push ax
-  push dx
-  mov al, [si]      ; load status
-  cmp al, ICON_EXPLOSION_BULLET
-  je .remove
-  mov dx, [si + BULLET_POSITION_OFFSET]  ; load position
-  cmp dh, 0
-  je .remove
-  cmp dh, GAME_HEIGHT - 1
-  je .remove
-  jmp .done
-.remove:
-  call _remove_bullet ; remove the bullet
-  sub si, BULLET_SIZE           ; reset loop to former bullet -> next loop is the next
-.done:
-  pop dx
-  pop ax
-  ret
-
-
-; ******************************************************
 ;  * render all bullets
 ;  *****************************************************
 
@@ -145,14 +72,6 @@ create_player_bullet:
   pop ax
   ret
 
-; let an invader shoot a bullet
-create_invader_bullet:
-  push ax
-  mov al, BULLET_STATUS_INVADER
-  call _create_bullet
-  pop ax
-  ret
-
 ; create a new bullet
 ; DX position of creator
 ; AL status
@@ -161,9 +80,6 @@ _create_bullet:
   push di
   cmp al, BULLET_STATUS_PLAYER
   je .player
-.invader:
-  inc dh  ; adjust the creator position
-  jmp .create
 .player:
   dec dh  ; adjust the creator position
 .create:

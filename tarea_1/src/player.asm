@@ -21,6 +21,7 @@ move_player:
   je .shoot
   jmp .check
 .shoot:
+  mov ah, [player_is_shooting]
   call create_player_bullet
   jmp .check
 .left:
@@ -47,7 +48,6 @@ move_player:
   pop ax
   ret
 
-
 ; ******************************************************
 ;  * render
 ;  *****************************************************
@@ -58,7 +58,7 @@ render_player:
   cmp dx, INVALID_STATE
   je .done
   mov al, ICON_PLAYER
-  mov bl, FG_CYAN
+  mov bl, FG_BRIGHT_GREEN
   add bl, BG_BLACK
   call print_object
 .done:

@@ -3,28 +3,12 @@
 ;  *****************************************************
 init_game:
   ; initialize the player
-  mov word [player_pos], 0x1401
+  mov word [player_pos], 0x0915
 
-  ; initialize the invaders
-  ; mov byte [invaders_move_direction], MOVE_RIGHT
-  ; mov byte [invaders_move_cycle], 0
-  ; mov byte [invaders_shoot_cycle], 0
-  ; mov byte [num_invaders_alive], NUM_INVADERS
-  ; mov word [invaders + INVADER_SIZE *  0], 0x0102
-  ; mov word [invaders + INVADER_SIZE *  1], 0x0304
-  ; mov word [invaders + INVADER_SIZE *  2], 0x0106
-  ; mov word [invaders + INVADER_SIZE *  3], 0x0308
-  ; mov word [invaders + INVADER_SIZE *  4], 0x010A
-  ; mov word [invaders + INVADER_SIZE *  5], 0x030C
-  ; mov word [invaders + INVADER_SIZE *  6], 0x010E
-  ; mov word [invaders + INVADER_SIZE *  7], 0x0310
-  ; mov word [invaders + INVADER_SIZE *  8], 0x0112
-  ; mov word [invaders + INVADER_SIZE *  9], 0x0314
-  ; mov word [invaders + INVADER_SIZE * 10], 0x0116
-  ; mov word [invaders + INVADER_SIZE * 11], 0x0318
+  ; initialize game counter
+  mov dword [counter], 15  ;0x3C = 60
 
   ; initialize the bullets
-  mov byte [bullets_move_cycle], 0
   mov byte [bullet_list], 0
   mov word [bullet_list_end], bullet_list
 
