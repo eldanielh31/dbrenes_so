@@ -6,11 +6,14 @@ init_game:
   mov word [player_pos], 0x0915
 
   ; initialize game counter
-  mov byte [counter], 15  ;0x3C = 60
+  mov dword [counter], 0x64 ; 100
 
   ; initialize the bullets
   mov byte [bullet_list], 0
   mov word [bullet_list_end], bullet_list
+
+  ; initializae game state
+  mov byte [game_state], GAME_STATE_PLAYING
 
   ret
 
@@ -24,7 +27,7 @@ init_game:
 update_game_state:
   ; check whether the player is destroyed
   cmp word [player_pos], INVALID_STATE
-  je .invaders_win
+  je .player_loose
 
   ; check whether the player wins
   ; cmp byte [num_invaders_alive], 0
@@ -35,17 +38,29 @@ update_game_state:
   cmp al, GAME_FINISHED_KEY
   je .game_finished_state
 
+  ; check if time is greater than 0
+  cmp byte [counter], 0
+  jg .decrease_counter
+
+  ; check if time is equal to 0
+  cmp byte [counter], 0
+  je .player_loose
+
   ; still playing
   mov byte [game_state], GAME_STATE_PLAYING
   jmp .done
-.invaders_win:
-  mov byte [game_state], GAME_STATE_INVADERS_WIN
-  jmp .done
+
 .player_win:
   mov byte [game_state], GAME_STATE_PLAYER_WIN
   jmp .done
+.player_loose:
+  mov byte [game_state], GAME_STATE_PLAYER_LOOSE
+  jmp .done
 .game_finished_state:
   mov byte [game_state], GAME_STATE_GAME_FINISHED
+  jmp .done
+.decrease_counter:
+  sub dword [counter], 1
 .done:
   ret
 

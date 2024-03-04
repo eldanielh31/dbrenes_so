@@ -29,7 +29,7 @@ org 0x8000
 ; GAME STATES
 %define GAME_STATE_PLAYING 0
 %define GAME_STATE_PLAYER_WIN 1
-%define GAME_STATE_INVADERS_WIN 2
+%define GAME_STATE_PLAYER_LOOSE 2
 %define GAME_STATE_GAME_FINISHED 3
 
 ; PLAY KEYS
@@ -196,9 +196,6 @@ game:
   cmp byte [game_state], GAME_STATE_PLAYING
   jne .done
 
-  cmp byte [game_state], GAME_STATE_GAME_FINISHED
-  je end 
-
   mov cx, 0x0000  ; 0.05 seconds (cx:dx)
   mov dx, 0x1388  ; 0x00001388 = 5000
   call sleep
@@ -211,7 +208,7 @@ game:
 end:
   cmp byte [game_state], GAME_STATE_PLAYER_WIN
   je .player_win
-  cmp byte [game_state], GAME_STATE_INVADERS_WIN
+  cmp byte [game_state], GAME_STATE_PLAYER_LOOSE
   je .player_loose
   cmp byte [game_state], GAME_STATE_GAME_FINISHED
   je .game_finished
@@ -302,7 +299,7 @@ segment .bss
   game_state resb 1
 
   ; game counter
-  counter resb 1
+  counter resd 1
   buffer resb 4    ; Reserve space for the converted string
 
   ; player
