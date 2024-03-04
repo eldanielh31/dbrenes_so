@@ -172,7 +172,7 @@ render_controlls:
   call print_string
   inc dh
 
-  ; print shoot
+  ; print shoot key
   mov si, shoot_string
   call print_string
   inc dh
@@ -180,12 +180,53 @@ render_controlls:
   mov si, space_string
   call print_string
   inc dh
-
+  
   ; print time
   mov si, time_string
   call print_string
   inc dh
 
+  mov si, space_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
+  inc dh
+
+  ; print painting
+  cmp byte [player_can_shoot], 0
+  je not_painting
+
+  cmp byte [player_can_shoot], 1
+  je painting
+
+not_painting:
+  mov si, not_painting_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
+  jmp done
+
+painting:
+  mov si, painting_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
+  jmp done
+
+done:
+  pop dx
+  pop si
+  ret
+
+
+int_to_str:
+  ;**********************************************
   ; print time value
   ; Convert the value of the counter to a string
   lea si, [counter]
@@ -205,6 +246,7 @@ render_controlls:
   pop dx
   pop si
   ret
+
 
 itoa:
     mov eax, [si]      ; Get the value of the counter

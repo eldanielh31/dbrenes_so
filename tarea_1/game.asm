@@ -251,6 +251,10 @@ right_up_string db " D = move right up", 0
 right_down_string db " E = move right down", 0
 
 shoot_string db " SPACE = print", 0
+
+painting_string db " Painting = YES", 0
+not_painting_string db " Painting = NO", 0
+
 time_string db " Time left: ", 0
 counter_string db " ", 0
 
