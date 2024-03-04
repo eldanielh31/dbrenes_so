@@ -40,35 +40,43 @@ move_player:
 .left:
   mov al, MOVE_LEFT
   call move
+  mov byte [current_color], FG_BLUE
   jmp .make_shoot
 .right:
   mov al, MOVE_RIGHT
   call move
+  mov byte [current_color], FG_CYAN
   jmp .make_shoot
 .up:
   mov al, MOVE_UP
   call move
+  mov byte [current_color], FG_RED
   jmp .make_shoot
 .down:
   mov al, MOVE_DOWN
   call move
+  mov byte [current_color], FG_MAGENTA
   jmp .make_shoot
 
 .left_up:
   mov al, MOVE_LEFT_UP
   call move
+  mov byte [current_color], FG_YELLOW
   jmp .make_shoot
 .left_down:
   mov al, MOVE_LEFT_DOWN
   call move
+  mov byte [current_color], FG_BRIGHT_YELLOW
   jmp .make_shoot
 .right_up:
   mov al, MOVE_RIGHT_UP
   call move
+  mov byte [current_color], FG_WHITE
   jmp .make_shoot
 .right_down:
   mov al, MOVE_RIGHT_DOWN
   call move
+  mov byte [current_color], FG_DARK_GRAY
   jmp .make_shoot
 
 .switch_shoot:

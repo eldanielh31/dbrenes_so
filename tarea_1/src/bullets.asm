@@ -24,7 +24,7 @@ _render_bullet:
   jmp .print
 .set_bullet:
   mov al, ICON_BULLET  ; set bullet
-  mov bl, FG_RED
+  mov bl, [current_color]
   add bl, BG_BLACK
 .print:
   call print_object

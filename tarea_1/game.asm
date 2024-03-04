@@ -40,10 +40,10 @@ org 0x8000
 %define MOVE_UP_KEY 'i'
 %define MOVE_DOWN_KEY 'k'
 
-%define MOVE_LEFT_UP_KEY 'q'
-%define MOVE_LEFT_DOWN_KEY 'a'
-%define MOVE_RIGHT_UP_KEY 'e'
-%define MOVE_RIGHT_DOWN_KEY 'd'
+%define MOVE_LEFT_UP_KEY 'a'
+%define MOVE_LEFT_DOWN_KEY 'q'
+%define MOVE_RIGHT_UP_KEY 'd'
+%define MOVE_RIGHT_DOWN_KEY 'e'
 
 %define SHOOT_KEY ' '
 
@@ -245,10 +245,10 @@ right_string db " L = move right", 0
 up_string db " I = move up", 0
 down_string db " K = move down", 0
 
-left_up_string db " Q = move left up", 0
-left_down_string db " A = move left down", 0
-right_up_string db " E = move right up", 0
-right_down_string db " D = move right down", 0
+left_up_string db " A = move left up", 0
+left_down_string db " Q = move left down", 0
+right_up_string db " D = move right up", 0
+right_down_string db " E = move right down", 0
 
 shoot_string db " SPACE = print", 0
 time_string db " Time left: ", 0
@@ -260,6 +260,9 @@ section .data
 segment .bss
   ; display properties
   display_offset resb 1
+
+  ; current color to print
+  current_color resb 1
 
   ; keyboard
   key_pressed resb 1
