@@ -30,6 +30,11 @@ update_game_state:
   ; cmp byte [num_invaders_alive], 0
   ; je .player_win
 
+  ; check if player finished the game
+  mov al, [key_pressed]
+  cmp al, GAME_FINISHED_KEY
+  je .game_finished_state
+
   ; still playing
   mov byte [game_state], GAME_STATE_PLAYING
   jmp .done
@@ -38,6 +43,9 @@ update_game_state:
   jmp .done
 .player_win:
   mov byte [game_state], GAME_STATE_PLAYER_WIN
+  jmp .done
+.game_finished_state:
+  mov byte [game_state], GAME_STATE_GAME_FINISHED
 .done:
   ret
 

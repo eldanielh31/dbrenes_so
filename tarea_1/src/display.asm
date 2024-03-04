@@ -180,6 +180,15 @@ render_controlls:
   mov si, space_string
   call print_string
   inc dh
+
+  ; print finish game key
+  mov si, finish_game_string
+  call print_string
+  inc dh
+
+  mov si, space_string
+  call print_string
+  inc dh
   
   ; print time
   mov si, time_string

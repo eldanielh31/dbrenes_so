@@ -30,10 +30,12 @@ org 0x8000
 %define GAME_STATE_PLAYING 0
 %define GAME_STATE_PLAYER_WIN 1
 %define GAME_STATE_INVADERS_WIN 2
+%define GAME_STATE_GAME_FINISHED 3
 
 ; PLAY KEYS
 %define START_KEY ' '
 %define RETRY_KEY 'r'
+%define GAME_FINISHED_KEY 'f'
 
 %define MOVE_LEFT_KEY 'j'
 %define MOVE_RIGHT_KEY 'l'
@@ -194,6 +196,9 @@ game:
   cmp byte [game_state], GAME_STATE_PLAYING
   jne .done
 
+  cmp byte [game_state], GAME_STATE_GAME_FINISHED
+  je end 
+
   mov cx, 0x0000  ; 0.05 seconds (cx:dx)
   mov dx, 0x1388  ; 0x00001388 = 5000
   call sleep
@@ -206,13 +211,29 @@ game:
 end:
   cmp byte [game_state], GAME_STATE_PLAYER_WIN
   je .player_win
-  mov ax, end_string_l
-  jmp .print_game_result
+  cmp byte [game_state], GAME_STATE_INVADERS_WIN
+  je .player_loose
+  cmp byte [game_state], GAME_STATE_GAME_FINISHED
+  je .game_finished
+
 .player_win:
   mov ax, end_string_w
-.print_game_result:
   mov bx, end_string_o
   call print_window
+  jmp .wait
+
+.player_loose:
+  mov ax, end_string_l
+  mov bx, end_string_o
+  call print_window
+  jmp .wait
+
+.game_finished:
+  mov ax, end_string_game_finished
+  mov bx, end_string_o
+  call print_window
+  jmp .wait
+
 .wait:
   call get_key
   mov al, [key_pressed]
@@ -234,6 +255,7 @@ intro_string_o db "#   Press SPACE to start   #", 0
 ; end
 end_string_w db "#       PLAYER  wins       #", 0
 end_string_l db "#        YOU LOOSE         #", 0
+end_string_game_finished db "#  YOU FINISHED THE GAME!  #", 0
 end_string_o db "#    Press R to restart    #", 0
 
 ; controls
@@ -250,13 +272,15 @@ left_down_string db " Q = move left down", 0
 right_up_string db " D = move right up", 0
 right_down_string db " E = move right down", 0
 
-shoot_string db " SPACE = print", 0
+shoot_string db " SPACE = print color", 0
 
 painting_string db " Painting = YES", 0
 not_painting_string db " Painting = NO", 0
 
 time_string db " Time left: ", 0
 counter_string db " ", 0
+
+finish_game_string db " F = finish the game", 0
 
 section .data
   newline db 0xA ; newline character
