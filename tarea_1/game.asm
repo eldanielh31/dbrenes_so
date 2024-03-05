@@ -275,6 +275,9 @@ shoot_string db " SPACE = print color", 0
 painting_string db " Painting = YES", 0
 not_painting_string db " Painting = NO", 0
 
+deleting_string db " Deleting = YES", 0
+not_deleting_string db " Deleting = NO", 0
+
 time_string db " Time left: ", 0
 counter_string db " ", 0
 

@@ -205,12 +205,17 @@ render_controlls:
   call print_string
   inc dh
 
+check_paint_painting:
   ; print painting
   cmp byte [player_can_shoot], 0
   je not_painting
 
-  cmp byte [player_can_shoot], 1
-  je painting
+  mov si, painting_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
+  jmp check_paint_delete
 
 not_painting:
   mov si, not_painting_string
@@ -218,10 +223,21 @@ not_painting:
   inc dh
   mov si, space_string
   call print_string
+
+check_paint_delete:
+  ; print deleting
+  cmp byte [player_can_delete], 0
+  je not_deleting
+
+  mov si, deleting_string
+  call print_string
+  inc dh
+  mov si, space_string
+  call print_string
   jmp done
 
-painting:
-  mov si, painting_string
+not_deleting:
+  mov si, not_deleting_string
   call print_string
   inc dh
   mov si, space_string
