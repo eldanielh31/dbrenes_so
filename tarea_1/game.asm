@@ -29,6 +29,9 @@ org 0x8000
 ; PLAYER DELETE INITIAL STATE (PLAYER_CAN_DELETE)
 %define PLAYER_CAN_DELETE_GLOBAL 0
 
+; GAME COUNTER
+%define GAME_COUNTER 0x189C
+
 ; GAME STATES
 %define GAME_STATE_PLAYING 0
 %define GAME_STATE_PLAYER_WIN 1
@@ -168,6 +171,7 @@ intro:
 set_global_variables:
   mov byte [player_can_shoot], PLAYER_CAN_SHOOT_GLOBAL
   mov byte [player_can_delete], PLAYER_CAN_DELETE_GLOBAL
+  mov dword [game_counter], GAME_COUNTER
 .done:
   ret
 
@@ -191,6 +195,9 @@ game:
   call render_player
 
   call render_controlls
+  
+  ; decrease game counter value
+  dec dword [game_counter]
 
   ; update to game state
   call update_game_state
@@ -303,8 +310,8 @@ segment .bss
   game_state resb 1
 
   ; game counter
-  counter resd 1
-  buffer resb 4    ; Reserve space for the converted string
+  game_counter resd 1
+  buffer resb 1
 
   ; player
   player_pos resw 1

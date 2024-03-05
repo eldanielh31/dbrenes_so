@@ -254,7 +254,7 @@ int_to_str:
   ;**********************************************
   ; print time value
   ; Convert the value of the counter to a string
-  lea si, [counter]
+  lea si, [game_counter]
   lea di, buffer
   ; call itoa
 
