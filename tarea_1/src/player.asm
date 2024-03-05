@@ -26,9 +26,18 @@ move_player:
   je .right_up
   cmp al, MOVE_RIGHT_DOWN_KEY
   je .right_down
-
   cmp al, SHOOT_KEY
   je .shoot
+  cmp al, DELETE_KEY
+  je .shoot_delete
+
+  ;No key press
+  jmp .check
+
+.shoot_delete:
+  cmp byte [player_can_delete], 0
+  je .switch_delete
+  mov byte [player_can_delete], 0
   jmp .check
 
 .shoot:
@@ -36,7 +45,7 @@ move_player:
   je .switch_shoot
   mov byte [player_can_shoot], 0
   jmp .check
-  
+
 .left:
   mov al, MOVE_LEFT
   call move
@@ -79,6 +88,9 @@ move_player:
   mov byte [current_color], FG_DARK_GRAY
   jmp .make_shoot
 
+.switch_delete:
+  mov byte [player_can_delete], 1
+  jmp .check
 .switch_shoot:
   mov byte [player_can_shoot], 1
 .make_shoot:

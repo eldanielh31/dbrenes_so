@@ -43,8 +43,8 @@ update_game_state:
   jg .decrease_counter
 
   ; check if time is equal to 0
-  cmp byte [counter], 0
-  je .player_loose
+  ; cmp byte [counter], 0
+  ; je .player_loose
 
   ; still playing
   mov byte [game_state], GAME_STATE_PLAYING

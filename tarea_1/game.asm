@@ -12,7 +12,7 @@ org 0x8000
 %define ICON_PLAYER 232
 %define ICON_INVADER 'T'
 %define ICON_BULLET '|'
-%define ICON_EXPLOSION_BULLET '#'
+%define ICON_EXPLOSION_BULLET ' '
 %define ICON_WALL '#'
 
 ; GAME DIFFICULTY LEVEL KEYS
@@ -25,6 +25,9 @@ org 0x8000
 
 ; PLAYER SHOOTING INITIAL STATE (PLAYER_CAN_SHOOT)
 %define PLAYER_CAN_SHOOT_GLOBAL 0
+
+; PLAYER DELETE INITIAL STATE (PLAYER_CAN_DELETE)
+%define PLAYER_CAN_DELETE_GLOBAL 0
 
 ; GAME STATES
 %define GAME_STATE_PLAYING 0
@@ -48,6 +51,7 @@ org 0x8000
 %define MOVE_RIGHT_DOWN_KEY 'e'
 
 %define SHOOT_KEY ' '
+%define DELETE_KEY 'z'
 
 ; MOVE DIRECTIONS
 %define MOVE_UP 0
@@ -138,7 +142,7 @@ jmp main
 main:
   call intro
 .game:
-  call select_difficulty_level
+  call set_global_variables
   call game
   call end
   jmp .game
@@ -160,13 +164,10 @@ intro:
 .done:
   ret
 
-; select difficulty level
-select_difficulty_level:
-  je .easy_level
-.easy_level:
+; set glob var
+set_global_variables:
   mov byte [player_can_shoot], PLAYER_CAN_SHOOT_GLOBAL
-  mov byte [invaders_shoot_cycles], INVADERS_EASY_LEVEL
-  jmp .done
+  mov byte [player_can_delete], PLAYER_CAN_DELETE_GLOBAL
 .done:
   ret
 
@@ -306,8 +307,7 @@ segment .bss
   player_pos resw 1
 
   player_can_shoot resb 1
-
-  invaders_shoot_cycles resb 1
+  player_can_delete resb 1
 
   ; bullets:  0x STATUS PY PX
   ; STATUS == 0: end of list

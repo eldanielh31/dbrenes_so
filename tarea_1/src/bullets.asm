@@ -1,3 +1,26 @@
+; delete bullets that are out of the screen or exploded
+; SI bullet pointer
+_check_and_delete_bullet:
+  push ax
+  push dx
+  mov al, [si]      ; load status
+  cmp al, ICON_EXPLOSION_BULLET
+  je .remove
+  mov dx, [si + BULLET_POSITION_OFFSET]  ; load position
+  cmp dh, 0
+  je .remove
+  cmp dh, GAME_HEIGHT - 1
+  je .remove
+  jmp .done
+.remove:
+  call _remove_bullet ; remove the bullet
+  sub si, BULLET_SIZE           ; reset loop to former bullet -> next loop is the next
+.done:
+  pop dx
+  pop ax
+  ret
+
+
 ; ******************************************************
 ;  * render all bullets
 ;  *****************************************************
@@ -53,7 +76,11 @@ _check_bullet_collision:
   mov ax, [si + BULLET_POSITION_OFFSET]  ; load position
   cmp ax, dx
   jne .done
-  mov dx, INVALID_STATE      ; set position to invalid state
+  ;impact no lost the game
+  ; mov dx, INVALID_STATE      ; set position to invalid state
+  cmp byte [player_can_delete], 1
+  jne .done
+.set_bullet_delete:
   mov byte [si], ICON_EXPLOSION_BULLET  ; set bullet status to explosion
 .done:
   pop ax
