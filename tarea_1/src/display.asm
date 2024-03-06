@@ -177,6 +177,11 @@ render_controlls:
   call print_string
   inc dh
 
+  ; print erase key
+  mov si, erase_paint_string
+  call print_string
+  inc dh
+
   mov si, space_string
   call print_string
   inc dh

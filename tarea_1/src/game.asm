@@ -16,6 +16,9 @@ init_game:
   ; initializae game state
   mov byte [game_state], GAME_STATE_PLAYING
 
+  ; initialize game counter
+  mov dword [game_counter], GAME_COUNTER
+  
   ret
 
 

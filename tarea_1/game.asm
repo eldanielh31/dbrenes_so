@@ -171,7 +171,6 @@ intro:
 set_global_variables:
   mov byte [player_can_shoot], PLAYER_CAN_SHOOT_GLOBAL
   mov byte [player_can_delete], PLAYER_CAN_DELETE_GLOBAL
-  mov dword [game_counter], GAME_COUNTER
 .done:
   ret
 
@@ -278,6 +277,7 @@ right_up_string db " D = move right up", 0
 right_down_string db " E = move right down", 0
 
 shoot_string db " SPACE = print color", 0
+erase_paint_string db " Z = erase color", 0
 
 painting_string db " Painting = YES", 0
 not_painting_string db " Painting = NO", 0
