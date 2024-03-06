@@ -4,9 +4,13 @@
 init_game:
   ; initialize the player
   mov word [player_pos], 0x0915
+  mov word [player_init_pos], 0x0915
 
   ; initialize the bullets
+  mov byte [player_win_square], 0
+  mov byte [player_prev_mov], 5
   mov byte [bullet_list], 0
+  mov byte [player_count_mov], 0
   mov word [bullet_list_end], bullet_list
 
   ; initializae game state
@@ -27,8 +31,8 @@ update_game_state:
   je .player_loose
 
   ; check whether the player wins
-  ; cmp byte [num_invaders_alive], 0
-  ; je .player_win
+  cmp byte [player_win_square], 1
+  je .player_win
 
   ; check if player finished the game
   mov al, [key_pressed]

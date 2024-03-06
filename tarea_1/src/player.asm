@@ -66,7 +66,6 @@ move_player:
   call move
   mov byte [current_color], FG_MAGENTA
   jmp .make_shoot
-
 .left_up:
   mov al, MOVE_LEFT_UP
   call move
@@ -93,7 +92,9 @@ move_player:
   jmp .check
 .switch_shoot:
   mov byte [player_can_shoot], 1
+  jmp .check
 .make_shoot:
+  call check_square
   cmp byte [player_can_shoot], 0
   je .check
 .true_shoot:
@@ -123,3 +124,32 @@ render_player:
   pop dx
   pop ax
   ret
+
+check_square:
+  cmp byte[player_prev_mov], al
+  jne .player_next_pos
+  jmp .done
+
+  .player_next_pos:
+    cmp byte[player_count_mov], 4
+    je .player_check_win_square
+
+    inc byte[player_count_mov]
+    mov byte[player_prev_mov], al
+    jmp .done
+  
+  .player_check_win_square:
+    mov byte [player_win_square], 1
+    jmp .done
+
+    cmp [player_init_pos], dx
+    jne .player_clear_status_win
+    mov byte [player_win_square], 1
+    jmp .done
+
+  .player_clear_status_win:
+    mov byte[player_count_mov], 0
+    mov [player_init_pos], dx
+
+  .done:
+    ret

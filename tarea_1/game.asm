@@ -316,6 +316,11 @@ segment .bss
   ; player
   player_pos resw 1
 
+  player_init_pos resw 1
+  player_prev_mov resb 1
+  player_count_mov resb 1
+  player_win_square resb 1
+
   player_can_shoot resb 1
   player_can_delete resb 1
 
