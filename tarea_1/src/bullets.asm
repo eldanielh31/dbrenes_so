@@ -14,7 +14,7 @@ _check_and_delete_bullet:
   jmp .done
 .remove:
   call _remove_bullet ; remove the bullet
-  sub si, BULLET_SIZE           ; reset loop to former bullet -> next loop is the next
+  sub si, BULLET_SIZE ; reset loop to former bullet -> next loop is the next
 .done:
   pop dx
   pop ax

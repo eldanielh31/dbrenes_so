@@ -26,8 +26,9 @@ init_game:
 ;  * update to game_state to check whether the game is finished
 ;  **************************************************************
 ; AL 0: still playing
-;    1: invaders win
-;    2: player wins
+;    1: player wins
+;    2: player loose
+;    3: game finished
 update_game_state:
   ; check whether the player is destroyed
   cmp word [player_pos], INVALID_STATE

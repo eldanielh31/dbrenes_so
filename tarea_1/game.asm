@@ -15,14 +15,6 @@ org 0x8000
 %define ICON_EXPLOSION_BULLET ' '
 %define ICON_WALL '#'
 
-; GAME DIFFICULTY LEVEL KEYS
-%define GAME_EASY_LEVEL_KEY '1'
-%define GAME_MEDIUM_LEVEL_KEY '2'
-%define GAME_HARD_LEVEL_KEY '3'
-
-; INVADERS DIFFICULTY LEVEL (invaders shoot cycles)
-%define INVADERS_EASY_LEVEL 6
-
 ; PLAYER SHOOTING INITIAL STATE (PLAYER_CAN_SHOOT)
 %define PLAYER_CAN_SHOOT_GLOBAL 0
 
@@ -306,7 +298,8 @@ segment .bss
   ; game state
   ; 0: still playing
   ; 1: player wins
-  ; 2: invaders win
+  ; 2: player loose
+  ; 3: game finished
   game_state resb 1
 
   ; game counter
