@@ -5,10 +5,10 @@
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
-
-// #include "creator.h"
+#include <semaphore.h> // Agregar la biblioteca de semáforos
 
 #define SHARED_MEMORY_SIZE 100
+#define SEMAPHORE_NAME "/shared_semaphore" // Nombre del semáforo compartido
 
 struct SharedData {
     char character;
@@ -29,6 +29,13 @@ int main(int argc, char *argv[]) {
 
     printf("Mode: %s \n", mode);
 
+    // Crear o abrir el semáforo
+    sem_t *sem = sem_open(SEMAPHORE_NAME, O_CREAT, 0666, 1);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
     // Abrir el espacio de memoria compartida
     fd = shm_open("/shared_memory", O_RDWR, 0666);
     if (fd == -1) {
@@ -42,6 +49,9 @@ int main(int argc, char *argv[]) {
         perror("mmap");
         exit(EXIT_FAILURE);
     }
+
+    // Esperar a que el semáforo esté libre
+    sem_wait(sem);
 
     // Leer de memoria compartida y reconstruir el archivo original
     FILE *file = fopen("reconstructed.txt", "w");
@@ -72,9 +82,15 @@ int main(int argc, char *argv[]) {
 
     fclose(file);
 
-    //Desmapear espacio de memoria compartida
+    // Liberar el semáforo
+    sem_post(sem);
+
+    // Desmapear espacio de memoria compartida
     memset(shared_memory, 0, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
     close(fd);
+
+    // Cerrar el semáforo
+    sem_close(sem);
 
     return 0;
 }
