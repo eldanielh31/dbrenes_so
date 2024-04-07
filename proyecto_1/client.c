@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 
+// #include "creator.h"
+
 #define SHARED_MEMORY_SIZE 100
 
 struct SharedData {
@@ -14,12 +16,15 @@ struct SharedData {
     int position;
 };
 
+ 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Uso: %s <archivo_de_texto>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
+    // int SHARED_MEMORY_SIZE = atoi(getenv("SHARED_MEMORY_SIZE"));
+    
     char *archivo = argv[1];
     struct SharedData *shared_memory;
     int fd;
@@ -49,22 +54,25 @@ int main(int argc, char *argv[]) {
     int position = 0;
     while ((c = fgetc(file)) != EOF) {
         // Escribir en memoria compartida de manera circular
-        shared_memory[position % SHARED_MEMORY_SIZE].character = c;
-        shared_memory[position % SHARED_MEMORY_SIZE].timestamp = time(NULL);
-        shared_memory[position % SHARED_MEMORY_SIZE].position = position;
-        struct tm *time_info = localtime(&shared_memory[position % SHARED_MEMORY_SIZE].timestamp);
-        char time_str[80];
-        strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
-        printf("Carácter: %c, Hora: %s, Posición: %d\n", c, time_str, position); // Imprimir caracter, hora y posición
+        if (position < SHARED_MEMORY_SIZE){
+            shared_memory[position % SHARED_MEMORY_SIZE].character = c;
+            shared_memory[position % SHARED_MEMORY_SIZE].timestamp = time(NULL);
+            shared_memory[position % SHARED_MEMORY_SIZE].position = position;
+            struct tm *time_info = localtime(&shared_memory[position % SHARED_MEMORY_SIZE].timestamp);
+            char time_str[80];
+            strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
+            printf("Carácter: %c, Hora: %s, Posición: %d\n", c, time_str, position); // Imprimir caracter, hora y posición
+        }
         position++;
     }
 
     fclose(file);
 
-    // Marcar finalización con un caracter especial al final del archivo
-    shared_memory[position % SHARED_MEMORY_SIZE].character = '\0';
-
-    // Desmapear espacio de memoria compartida
+    //Caracter para finalizar
+    if (position < SHARED_MEMORY_SIZE) {
+        shared_memory[position % SHARED_MEMORY_SIZE].character = '\0';
+    }
+    //Desmapear espacio de memoria compartida
     munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
     close(fd);
 

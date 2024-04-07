@@ -14,22 +14,20 @@ struct SharedData {
     time_t timestamp;
     int position;
 };
+void sigint_handler();
 
 int fd;
 struct SharedData *shared_memory;
 
-// Manejador de señales para SIGINT
-void sigint_handler() {
-    // Desmapear y cerrar el espacio de memoria compartida
-    munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
-    close(fd);
-    shm_unlink("/shared_memory");
-    exit(EXIT_SUCCESS);
-}
-
 int main(int argc, char *argv[]) {
     // Establecer el manejador de señales para SIGINT
     signal(SIGINT, sigint_handler);
+    if (argc != 2){
+        printf("Uso: %s <tamanno del buffer>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    // int SHARED_MEMORY_SIZE = atoi(argv[1]);
 
     // Crear el espacio de memoria compartida
     fd = shm_open("/shared_memory", O_CREAT | O_RDWR, 0666);
@@ -62,4 +60,13 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
+}
+
+// Manejador de señales para SIGINT
+void sigint_handler() {
+    // Desmapear y cerrar el espacio de memoria compartida
+    munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
+    close(fd);
+    shm_unlink("/shared_memory");
+    exit(EXIT_SUCCESS);
 }
