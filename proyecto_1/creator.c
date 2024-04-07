@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
             struct tm *time_info = localtime(&shared_memory[i].timestamp);
             char time_str[80];
             strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
-            printf("Posición %d: Carácter: %c, Hora: %s, Posición: %d\n", i, shared_memory[i].character, time_str, shared_memory[i].position);
+            printf("Posición %d: Carácter: %c, Hora: %s\n", shared_memory[i].position, shared_memory[i].character, time_str);
         }
     }
 
