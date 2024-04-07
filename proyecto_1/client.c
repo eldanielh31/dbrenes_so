@@ -1,85 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <semaphore.h>
 #include <string.h>
 #include <time.h>
 
-#define MAX_CHARACTERS 100
-#define BUFFER_SIZE 512
-
-typedef struct {
-    char buffer[MAX_CHARACTERS];
-    int in;
-    int out;
-    int count;
-    sem_t empty;
-    sem_t full;
-    sem_t mutex;
-} SharedData;
-
-void writeToSharedMemory(char character, SharedData *sharedData) {
-    sem_wait(&sharedData->empty);
-    sem_wait(&sharedData->mutex);
-
-    // Write to shared memory
-    sharedData->buffer[sharedData->in] = character;
-    sharedData->in = (sharedData->in + 1) % MAX_CHARACTERS;
-    sharedData->count++;
-
-    sem_post(&sharedData->mutex);
-    sem_post(&sharedData->full);
-}
+#define SHARED_MEMORY_SIZE 400
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Uso: %s <filename>\n", argv[0]);
+    if (argc != 2) {
+        printf("Uso: %s <archivo_de_texto>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    char *filename = argv[1];
+    char *archivo = argv[1];
+    char *shared_memory;
+    int fd;
 
-    // Abrir memoria compartida
-    key_t key = ftok("shmfile", 65);
-    int shmid = shmget(key, sizeof(SharedData), 0666);
-    SharedData *sharedData = (SharedData *)shmat(shmid, NULL, 0);
-
-    // Leer archivo y escribir en memoria compartida
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("Error al abrir el archivo");
+    // Abrir el espacio de memoria compartida
+    fd = shm_open("/shared_memory", O_RDWR, 0666);
+    if (fd == -1) {
+        perror("shm_open");
         exit(EXIT_FAILURE);
     }
 
-    char buffer[BUFFER_SIZE];
-    while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-        for (int i = 0; i < strlen(buffer); i++) {
-            writeToSharedMemory(buffer[i], sharedData);
-            // Muestra el caracter, la hora y la posición
-            time_t rawtime;
-            struct tm *timeinfo;
-            time(&rawtime);
-            timeinfo = localtime(&rawtime);
-            printf("Caracter: %c, Hora: %s, Posición: %d\n", buffer[i], asctime(timeinfo), sharedData->in);
-        }
+    // Mapear la memoria compartida
+    shared_memory = mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (shared_memory == MAP_FAILED) {
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+
+    // Leer el archivo de texto y escribir en memoria compartida
+    FILE *file = fopen(archivo, "r");
+    if (!file) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+
+    char c;
+    int position = 0;
+    while ((c = fgetc(file)) != EOF) {
+        // Escribir en memoria compartida de manera circular
+        shared_memory[position++ % SHARED_MEMORY_SIZE] = c;
+        printf("Carácter: %c, Hora: %ld, Posición: %d\n", c, time(NULL), position); // Imprimir caracter, hora y posición
     }
 
     fclose(file);
 
-    // Indicar que no hay más datos
-    // (esto puede ser mejorado para tener una señal más robusta)
-    sem_wait(&sharedData->mutex);
-    sharedData->count = -1;
-    sem_post(&sharedData->mutex);
-    sem_post(&sharedData->full);
+    // Marcar finalización
+    // Implementación pendiente
 
-    // Desconectar memoria compartida
-    shmdt(sharedData);
+    // Desmapear espacio de memoria compartida
+    munmap(shared_memory, SHARED_MEMORY_SIZE);
+    close(fd);
 
     return 0;
 }

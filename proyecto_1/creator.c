@@ -1,57 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <semaphore.h>
+#include <sys/mman.h>
 #include <fcntl.h>
-#include <sys/stat.h>
+#include <string.h>
 
-#define MAX_CHARACTERS 100
+#define SHARED_MEMORY_SIZE 400
 
-typedef struct {
-    char buffer[MAX_CHARACTERS];
-    int in;
-    int out;
-    int count;
-    sem_t empty;
-    sem_t full;
-    sem_t mutex;
-} SharedData;
+int main() {
+    int fd;
+    char *shared_memory;
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Uso: %s <numCharacters>\n", argv[0]);
+    // Crear el espacio de memoria compartida
+    fd = shm_open("/shared_memory", O_CREAT | O_RDWR, 0666);
+    if (fd == -1) {
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+    ftruncate(fd, SHARED_MEMORY_SIZE);
+
+    // Mapear la memoria compartida
+    shared_memory = mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (shared_memory == MAP_FAILED) {
+        perror("mmap");
         exit(EXIT_FAILURE);
     }
 
-    int numCharacters = atoi(argv[1]);
-
-    // Crear memoria compartida
-    key_t key = ftok("shmfile", 65);
-    int shmid = shmget(key, sizeof(SharedData), IPC_CREAT | 0666);
-    SharedData *sharedData = (SharedData *)shmat(shmid, NULL, 0);
-    
-    // Inicializar semáforos
-    sem_init(&sharedData->empty, 1, MAX_CHARACTERS);
-    sem_init(&sharedData->full, 1, 0);
-    sem_init(&sharedData->mutex, 1, 1);
-    
-    // Inicializar buffer
-    sharedData->in = 0;
-    sharedData->out = 0;
-    sharedData->count = 0;
-
-    // Visualización en tiempo real
+    // Visualización en tiempo real del contenido de la memoria compartida
     while (1) {
-        // Implementa aquí la visualización en tiempo real del contenido de la memoria compartida
-        sleep(1);
+        // Mostrar el contenido de la memoria compartida
+        printf("Contenido de la memoria compartida: %s\n", shared_memory);
+        sleep(1); // Actualizar cada segundo
     }
 
-    // Liberar memoria compartida
-    shmdt(sharedData);
-    shmctl(shmid, IPC_RMID, NULL);
+    // Desmapear y cerrar el espacio de memoria compartida
+    munmap(shared_memory, SHARED_MEMORY_SIZE);
+    close(fd);
+    shm_unlink("/shared_memory");
 
     return 0;
 }

@@ -1,61 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <semaphore.h>
+#include <string.h>
 #include <time.h>
 
-#define MAX_CHARACTERS 100
+#define SHARED_MEMORY_SIZE 400
 
-typedef struct {
-    char buffer[MAX_CHARACTERS];
-    int in;
-    int out;
-    int count;
-    sem_t empty;
-    sem_t full;
-    sem_t mutex;
-} SharedData;
+int main(int argc, char *argv[]) {
+    char *shared_memory;
+    int fd;
 
-int main() {
-    // Abrir memoria compartida
-    key_t key = ftok("shmfile", 65);
-    int shmid = shmget(key, sizeof(SharedData), 0666);
-    SharedData *sharedData = (SharedData *)shmat(shmid, NULL, 0);
-
-    // Reconstruir archivo original
-    while (1) {
-        sem_wait(&sharedData->full);
-        sem_wait(&sharedData->mutex);
-
-        if (sharedData->count == -1) {
-            sem_post(&sharedData->mutex);
-            sem_post(&sharedData->full);
-            break;
-        }
-
-        // Leer de memoria compartida y procesar
-        char character = sharedData->buffer[sharedData->out];
-        sharedData->out = (sharedData->out + 1) % MAX_CHARACTERS;
-        sharedData->count--;
-
-        sem_post(&sharedData->mutex);
-        sem_post(&sharedData->empty);
-
-        // Muestra el caracter, la hora y la posición
-        time_t rawtime;
-        struct tm *timeinfo;
-        time(&rawtime);
-        timeinfo = localtime(&rawtime);
-        printf("Caracter: %c, Hora: %s, Posición: %d\n", character, asctime(timeinfo), sharedData->out);
+    // Abrir el espacio de memoria compartida
+    fd = shm_open("/shared_memory", O_RDWR, 0666);
+    if (fd == -1) {
+        perror("shm_open");
+        exit(EXIT_FAILURE);
     }
 
-    // Desconectar memoria compartida
-    shmdt(sharedData);
+    // Mapear la memoria compartida
+    shared_memory = mmap(NULL, SHARED_MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (shared_memory == MAP_FAILED) {
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+
+    // Leer de memoria compartida y reconstruir el archivo original
+    FILE *file = fopen("reconstructed.txt", "w");
+    if (!file) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+
+    int position = 0;
+    while (1) {
+        char c = shared_memory[position++ % SHARED_MEMORY_SIZE];
+        if (c == '\0') // Fin del archivo
+            break;
+        fprintf(file, "%c", c);
+    }
+
+    fclose(file);
+
+    // Desmapear espacio de memoria compartida
+    munmap(shared_memory, SHARED_MEMORY_SIZE);
+    close(fd);
 
     return 0;
 }
