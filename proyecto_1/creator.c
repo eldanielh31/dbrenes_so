@@ -6,6 +6,7 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
+#include <semaphore.h>
 
 #define SHARED_MEMORY_SIZE 100
 
@@ -13,7 +14,9 @@ struct SharedData {
     char character;
     time_t timestamp;
     int position;
+    sem_t semaphore;
 };
+
 void sigint_handler();
 
 int fd;

@@ -14,6 +14,7 @@ struct SharedData {
     char character;
     time_t timestamp;
     int position;
+    sem_t semaphore; 
 };
 
 int main(int argc, char *argv[]) {
