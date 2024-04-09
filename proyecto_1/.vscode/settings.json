@@ -1,6 +1,11 @@
 {
     "files.associations": {
         "globals.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "signal.h": "c",
+        "unistd.h": "c",
+        "mman.h": "c",
+        "semaphore.h": "c",
+        "string.h": "c"
     }
 }

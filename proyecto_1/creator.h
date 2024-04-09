@@ -1,1 +1,0 @@
-extern int SHARED_MEMORY_SIZE;

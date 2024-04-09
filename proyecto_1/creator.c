@@ -8,19 +8,14 @@
 #include <time.h>
 #include <semaphore.h>
 
-#define SHARED_MEMORY_SIZE 100
-
-struct SharedData {
-    char character;
-    time_t timestamp;
-    int position;
-    sem_t semaphore;
-};
+#include "library.h"
 
 void sigint_handler();
 
 int fd;
+int fds;
 struct SharedData *shared_memory;
+struct SharedStats *shared_memory_stats;
 
 int main(int argc, char *argv[]) {
     // Establecer el manejador de señales para SIGINT
@@ -33,12 +28,20 @@ int main(int argc, char *argv[]) {
     // int SHARED_MEMORY_SIZE = atoi(argv[1]);
 
     // Crear el espacio de memoria compartida
-    fd = shm_open("/shared_memory", O_CREAT | O_RDWR, 0666);
+    fd = shm_open(SHARED_MEMORY_DATA_NAME, O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
         perror("shm_open");
         exit(EXIT_FAILURE);
     }
     ftruncate(fd, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
+
+    // Crear el espacio de memoria compartida
+    fds = shm_open(SHARED_MEMORY_STATS_NAME, O_CREAT | O_RDWR, 0666);
+    if (fds == -1) {
+        perror("shm_open_stats");
+        exit(EXIT_FAILURE);
+    }
+    ftruncate(fds, sizeof(struct SharedStats));
 
     // Mapear la memoria compartida
     shared_memory = mmap(NULL, SHARED_MEMORY_SIZE * sizeof(struct SharedData), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -46,6 +49,13 @@ int main(int argc, char *argv[]) {
         perror("mmap");
         exit(EXIT_FAILURE);
     }
+
+    shared_memory_stats = mmap(NULL, sizeof(struct SharedStats), PROT_READ | PROT_WRITE, MAP_SHARED, fds, 0);
+    if (shared_memory_stats == MAP_FAILED) {
+        perror("mmap stats");
+        exit(EXIT_FAILURE);
+    }
+
 
     // Mantener la lectura de la memoria compartida en tiempo real
     while (1) {
@@ -69,7 +79,9 @@ int main(int argc, char *argv[]) {
 void sigint_handler() {
     // Desmapear y cerrar el espacio de memoria compartida
     munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
-    close(fd);
-    shm_unlink("/shared_memory");
+    munmap(shared_memory_stats, sizeof(struct SharedStats));
+    close(fd); close(fds);
+    shm_unlink(SHARED_MEMORY_DATA_NAME);
+    shm_unlink(SHARED_MEMORY_STATS_NAME);
     exit(EXIT_SUCCESS);
 }

@@ -5,23 +5,15 @@
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
-#include <semaphore.h> // Agregar la biblioteca de semáforos
+#include <semaphore.h>
 
-#define SHARED_MEMORY_SIZE 100
-#define SEMAPHORE_NAME "/shared_semaphore" // Nombre del semáforo compartido
-
-struct SharedData {
-    char character;
-    time_t timestamp;
-    int position;
-    sem_t semaphore; 
-};
+#include "library.h"
 
 int main(int argc, char *argv[]) {
     struct SharedData *shared_memory;
     int fd;
 
-    if (argc != 2) {
+        if (argc != 2) {
         printf("Uso: %s <modo>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
@@ -30,15 +22,8 @@ int main(int argc, char *argv[]) {
 
     printf("Mode: %s \n", mode);
 
-    // Crear o abrir el semáforo
-    sem_t *sem = sem_open(SEMAPHORE_NAME, O_CREAT, 0666, 1);
-    if (sem == SEM_FAILED) {
-        perror("sem_open");
-        exit(EXIT_FAILURE);
-    }
-
-    // Abrir el espacio de memoria compartida
-    fd = shm_open("/shared_memory", O_RDWR, 0666);
+    // Abrir la memoria compartida
+    fd = shm_open(SHARED_MEMORY_DATA_NAME, O_RDWR, 0666);
     if (fd == -1) {
         perror("shm_open");
         exit(EXIT_FAILURE);
@@ -51,47 +36,42 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Esperar a que el semáforo esté libre
-    sem_wait(sem);
-
-    // Leer de memoria compartida y reconstruir el archivo original
+    // Crear un archivo para guardar los datos reconstruidos
     FILE *file = fopen("reconstructed.txt", "w");
     if (!file) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
 
-    int position = 0;
-    while (1) {
-        char c = shared_memory[position % SHARED_MEMORY_SIZE].character;
+    // Leer datos de la memoria compartida y escribirlos en el archivo
+    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
+        // Esperar a que el semáforo esté libre
+        sem_wait(&(shared_memory[i].semaphore));
 
-        struct tm *time_info = localtime(&shared_memory[position % SHARED_MEMORY_SIZE].timestamp);
+        // Escribir el carácter en el archivo si no es '\0' (fin del archivo)
+        if (shared_memory[i].character != '\0') {
+            fprintf(file, "%c", shared_memory[i].character);
+        }
+
+        struct tm *time_info = localtime(&shared_memory[i].timestamp);
         char time_str[80];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
-        
-        int pos = shared_memory[position % SHARED_MEMORY_SIZE].position;
-        
-        if (c == '\0' || position == SHARED_MEMORY_SIZE) {// Fin del archivo
-            break;
-        }
-                    
-        fprintf(file, "%c", c);       
-        printf("Carácter: %c, Hora: %s, Posición: %d\n", c, time_str, pos); // Imprimir caracter, hora y posición
-        
-        position++;
+
+        printf("Carácter: %c, Hora: %s, Posición: %d\n", 
+        shared_memory[i].character, 
+        time_str, 
+        shared_memory[i].position); // Imprimir caracter, hora y posición
+
+        // Liberar el semáforo
+        sem_post(&(shared_memory[i].semaphore));
     }
 
     fclose(file);
 
-    // Liberar el semáforo
-    sem_post(sem);
-
-    // Desmapear espacio de memoria compartida
+    // Limpiar la memoria compartida y liberar recursos
     memset(shared_memory, 0, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
+    munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
     close(fd);
-
-    // Cerrar el semáforo
-    sem_close(sem);
 
     return 0;
 }

@@ -7,16 +7,10 @@
 #include <time.h>
 #include <semaphore.h>
 
-#define SHARED_MEMORY_SIZE 100
-#define SEMAPHORE_NAME_PREFIX "/shared_semaphore_" // Prefijo para los nombres de los semáforos
-#define MAX_SEMAPHORE_NAME_LENGTH 50 // Longitud máxima del nombre del semáforo
+#include "library.h"
 
-struct SharedData {
-    char character;
-    time_t timestamp;
-    int position;
-    sem_t semaphore; // Semáforo para esta dirección en la memoria compartida
-};
+void initialize_semaphores(struct SharedData *shared_memory);
+void destroy_semaphores(struct SharedData *shared_memory);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -29,7 +23,7 @@ int main(int argc, char *argv[]) {
     int fd;
 
     // Crear o abrir el espacio de memoria compartida
-    fd = shm_open("/shared_memory", O_RDWR | O_CREAT, 0666);
+    fd = shm_open(SHARED_MEMORY_DATA_NAME, O_RDWR | O_CREAT, 0666);
     if (fd == -1) {
         perror("shm_open");
         exit(EXIT_FAILURE);
@@ -43,12 +37,12 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Inicializar los semáforos para cada dirección en la memoria compartida
-    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
-        char semaphore_name[MAX_SEMAPHORE_NAME_LENGTH];
-        snprintf(semaphore_name, MAX_SEMAPHORE_NAME_LENGTH, "%s%d", SEMAPHORE_NAME_PREFIX, i);
-        sem_init(&(shared_memory[i].semaphore), 1, 1); // Inicializa el semáforo con valor 1 (libre)
-    }
+    // Inicializar los semáforos
+    initialize_semaphores(shared_memory);
+
+    // Crear semáforo para control de espacio disponible
+    sem_t space_available;
+    sem_init(&space_available, 1, SHARED_MEMORY_SIZE); // Inicializa el semáforo con valor SHARED_MEMORY_SIZE (todos los espacios disponibles)
 
     // Leer el archivo de texto y escribir en memoria compartida
     FILE *file = fopen(archivo, "r");
@@ -60,6 +54,9 @@ int main(int argc, char *argv[]) {
     char c;
     int position = 0;
     while ((c = fgetc(file)) != EOF) {
+        // Verificar si hay espacio disponible en la memoria compartida
+        sem_wait(&space_available);
+
         // Esperar a que el semáforo esté libre
         sem_wait(&(shared_memory[position % SHARED_MEMORY_SIZE].semaphore));
 
@@ -73,7 +70,7 @@ int main(int argc, char *argv[]) {
         printf("Carácter: %c, Hora: %s, Posición: %d\n", c, time_str, position); // Imprimir caracter, hora y posición
         position++;
 
-        // Liberar el semáforo
+        // Liberar el semáforo y el espacio ocupado
         sem_post(&(shared_memory[position % SHARED_MEMORY_SIZE].semaphore));
     }
 
@@ -87,13 +84,25 @@ int main(int argc, char *argv[]) {
     }
 
     // Desinicializar los semáforos
-    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
-        sem_destroy(&(shared_memory[i].semaphore));
-    }
+    destroy_semaphores(shared_memory);
 
     // Desmapear espacio de memoria compartida
     munmap(shared_memory, SHARED_MEMORY_SIZE * sizeof(struct SharedData));
     close(fd);
 
     return 0;
+}
+
+// Función para inicializar los semáforos
+void initialize_semaphores(struct SharedData *shared_memory) {
+    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
+        sem_init(&(shared_memory[i].semaphore), 1, 1); // Inicializa el semáforo con valor 1 (libre)
+    }
+}
+
+// Función para destruir los semáforos
+void destroy_semaphores(struct SharedData *shared_memory) {
+    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
+        sem_destroy(&(shared_memory[i].semaphore));
+    }
 }
