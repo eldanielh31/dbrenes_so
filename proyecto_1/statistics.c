@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h> // Necesario para la función sleep
+#include "library.h"
 
 #define SHARED_MEMORY_STATS_SIZE sizeof(struct Statistics)
 

@@ -1,13 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-#include <semaphore.h>
-
 #include "library.h"
 
 void sigint_handler();
@@ -17,6 +7,9 @@ int fds;
 struct SharedData *shared_memory;
 struct SharedStats *shared_memory_stats;
 
+void initialize_semaphores(struct SharedData *shared_memory);
+void destroy_semaphores(struct SharedData *shared_memory);
+
 int main(int argc, char *argv[]) {
     // Establecer el manejador de señales para SIGINT
     signal(SIGINT, sigint_handler);
@@ -25,6 +18,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // TODO: Manejar la cantidad de espacio de memoria compartida
     // int SHARED_MEMORY_SIZE = atoi(argv[1]);
 
     // Crear el espacio de memoria compartida
@@ -56,6 +50,9 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // Inicializar los semáforos
+    initialize_semaphores(shared_memory);
+    sem_init(&shared_memory_stats[0].space_available, 1, SHARED_MEMORY_SIZE); // Inicializa el semáforo con valor SHARED_MEMORY_SIZE (todos los espacios disponibles)
 
     // Mantener la lectura de la memoria compartida en tiempo real
     while (1) {
@@ -83,5 +80,21 @@ void sigint_handler() {
     close(fd); close(fds);
     shm_unlink(SHARED_MEMORY_DATA_NAME);
     shm_unlink(SHARED_MEMORY_STATS_NAME);
+    // Desinicializar los semáforos
+    destroy_semaphores(shared_memory);
     exit(EXIT_SUCCESS);
+}
+
+// Función para inicializar los semáforos
+void initialize_semaphores(struct SharedData *shared_memory) {
+    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
+        sem_init(&(shared_memory[i].semaphore), 1, 1); // Inicializa el semáforo con valor 1 (libre)
+    }
+}
+
+// Función para destruir los semáforos
+void destroy_semaphores(struct SharedData *shared_memory) {
+    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) {
+        sem_destroy(&(shared_memory[i].semaphore));
+    }
 }

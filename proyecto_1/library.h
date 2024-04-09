@@ -1,6 +1,13 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+#include <signal.h>
 #include <time.h>
 #include <semaphore.h>
 
@@ -20,6 +27,7 @@ struct SharedStats {
 // Constantes necesarias
 #define SHARED_MEMORY_DATA_NAME "/shared_memory"
 #define SHARED_MEMORY_STATS_NAME "/shared_memory_stats"
+// TODO: Se puede pasar esta variable a ser una de memoria compartida que se instancia en el creador
 #define SHARED_MEMORY_SIZE 100
 #define SEMAPHORE_NAME_PREFIX "/shared_semaphore_" // Prefijo para los nombres de los semáforos
 #define MAX_SEMAPHORE_NAME_LENGTH 50 // Longitud máxima del nombre del semáforo
