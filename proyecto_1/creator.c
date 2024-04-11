@@ -30,9 +30,11 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // TODO: Manejar la cantidad de espacio de memoria compartida
+    // Establecer el tamanno del espacio de memoria compartida
     shared_memory_size = atoi(argv[1]);
     shared_memory_stats[DEFAULT_STRUCT_POS].shared_memory_size = shared_memory_size;
+
+    // Inicializar la posicion de lectura y escritura
     shared_memory_stats[DEFAULT_STRUCT_POS].pos_read = 0;
     shared_memory_stats[DEFAULT_STRUCT_POS].pos_write = 0;
 

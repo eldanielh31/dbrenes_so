@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // TODO: Que escriba al final del archivo y no sobreescriba todo el archivo. O bien colocar un flag para este tipo de modo, flag opcional
     // Crear un archivo para guardar los datos reconstruidos
     FILE *file = fopen("reconstructed.txt", "w");
     if (!file) {
@@ -69,8 +68,10 @@ int main(int argc, char *argv[]) {
         //Posicion actual de escritura
         int position = shared_memory_stats[DEFAULT_STRUCT_POS].pos_read;
 
+        // Escribir caracter en archivo de texto
         fprintf(file, "%c", shared_memory[position].character);
-
+        
+        /* 
         struct tm *time_info = localtime(&shared_memory[position].timestamp);
         char time_str[80];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
@@ -78,10 +79,16 @@ int main(int argc, char *argv[]) {
         printf("Carácter: %c, Hora: %s, Posición: %d\n", 
         shared_memory[position].character, 
         time_str, 
-        shared_memory[position].position);
+        shared_memory[position].position); */
 
+        // Imprimir caracter
+        printf("%c", shared_memory[position].character);
+
+        
+        // Actualizar posicion 
         position = (position == shared_memory_size - 1) ? 0 : (position + 1);
         shared_memory_stats[DEFAULT_STRUCT_POS].pos_read = position;
+
         // Liberar el semáforo
         sem_post(&(shared_memory_stats[DEFAULT_STRUCT_POS].space_available));
         // Ocupar un espacio en semaforo
@@ -93,9 +100,6 @@ int main(int argc, char *argv[]) {
 
     fclose(file);
 
-    //TODO: cambiar memset para dentro del for y que solo limpie el valor que se escribe y no toda la memoria
-    // Limpiar la memoria compartida y liberar recursos
-    // memset(shared_memory, 0, shared_memory_size * sizeof(struct SharedData));
     munmap(shared_memory, shared_memory_size * sizeof(struct SharedData));
     close(fd);
 

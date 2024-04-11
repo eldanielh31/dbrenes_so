@@ -55,8 +55,6 @@ int main(int argc, char *argv[]) {
     }
 
     char c;
-    // TODO: Para poder sincornizar varios clientes la posicion debe ser una varible global
-    // lo que quiere decir que hay que meterla en un espacio compartido (stats)
     while ((c = fgetc(file)) != EOF) {
         // Verificar si hay espacio disponible en la memoria compartida
         sem_wait(&shared_memory_stats[DEFAULT_STRUCT_POS].space_available);
@@ -68,11 +66,14 @@ int main(int argc, char *argv[]) {
         shared_memory[position].character = c;
         shared_memory[position].timestamp = time(NULL);
         shared_memory[position].position = position;
+
+        // Convertir el tiempo al formato requerido
         struct tm *time_info = localtime(&shared_memory[position].timestamp);
         char time_str[80];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", time_info);
         printf("Carácter: %c, Hora: %s, Posición: %d\n", c, time_str, position); // Imprimir caracter, hora y posición
-    
+
+        // Establecer nueva posicion y establecer la nueva posicion en memoria
         position = (position == shared_memory_size - 1) ? 0 : (position + 1);
         shared_memory_stats[DEFAULT_STRUCT_POS].pos_write = position;
 
