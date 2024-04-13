@@ -7,6 +7,9 @@
         "mman.h": "c",
         "semaphore.h": "c",
         "string.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "termios.h": "c",
+        "time.h": "c",
+        "resource.h": "c"
     }
 }

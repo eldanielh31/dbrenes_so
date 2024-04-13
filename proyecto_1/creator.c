@@ -38,6 +38,16 @@ int main(int argc, char *argv[]) {
     shared_memory_stats[DEFAULT_STRUCT_POS].pos_read = 0;
     shared_memory_stats[DEFAULT_STRUCT_POS].pos_write = 0;
 
+    // Inicializar variables de estadisticas
+    shared_memory_stats[DEFAULT_STRUCT_POS].total_char = 0;
+    shared_memory_stats[DEFAULT_STRUCT_POS].blocked_client_time = 0;
+    shared_memory_stats[DEFAULT_STRUCT_POS].blocked_reconstruct_time = 0;
+
+    shared_memory_stats[DEFAULT_STRUCT_POS].total_kernel_time_client = 0;
+    shared_memory_stats[DEFAULT_STRUCT_POS].total_kernel_time_reconstructor = 0;
+    shared_memory_stats[DEFAULT_STRUCT_POS].total_user_time_client = 0;
+    shared_memory_stats[DEFAULT_STRUCT_POS].total_user_time_reconstructor = 0;
+
     // Crear el espacio de memoria compartida
     fd = shm_open(SHARED_MEMORY_DATA_NAME, O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
