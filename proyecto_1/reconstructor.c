@@ -71,10 +71,14 @@ int main(int argc, char *argv[]) {
         perror("sem_getvalue");
         exit(EXIT_FAILURE);
     }
+
     // Leer datos de la memoria compartida y escribirlos en el archivo
-    while (sem_value != 0) {
+    while (1) {
+        if( shared_memory_stats[DEFAULT_STRUCT_POS].existClient == 0 && sem_value == 0) {
+            break;
+        }
         //Espera poder continuar si es modo manual
-        if( strcmp(mode, "manual") == 0) while (getchar() != 10);
+        else if( strcmp(mode, "manual") == 0) while (getchar() != 10);
 
         // Obtener el tiempo de uso antes de la ejecución
         time_t time0, time1;
@@ -111,8 +115,6 @@ int main(int argc, char *argv[]) {
 
         // Liberar el semáforo
         sem_post(&(shared_memory_stats[DEFAULT_STRUCT_POS].space_available));
-        //volver a leer los espacios disponibles
-        sem_getvalue(&(shared_memory_stats[DEFAULT_STRUCT_POS].space_unavailable), &sem_value);
 
         // Obtener el tiempo de uso después de la ejecución
         getrusage(RUSAGE_SELF, &usage);
@@ -123,6 +125,9 @@ int main(int argc, char *argv[]) {
         shared_memory_stats[DEFAULT_STRUCT_POS].total_kernel_time_reconstructor += end_kernel - start_kernel;
 
         if( strcmp(mode, "auto") == 0) usleep(250000); // Esperar un cuarto de segundo (250000 microsegundos)
+
+        //volver a leer los espacios disponibles
+        sem_getvalue(&(shared_memory_stats[DEFAULT_STRUCT_POS].space_unavailable), &sem_value);
     }
 
     //Finalizar programa

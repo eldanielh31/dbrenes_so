@@ -27,6 +27,7 @@ struct SharedStats {
     int pos_read;
     int pos_write;
     int shared_memory_size;
+    int existClient;
 
     int total_char;
 

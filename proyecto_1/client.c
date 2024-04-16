@@ -66,6 +66,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    shared_memory_stats[DEFAULT_STRUCT_POS].existClient ++;
     char c;
     while ((c = fgetc(file)) != EOF) {
         //Si es modo manual tiene que esperar un enter
@@ -125,6 +126,7 @@ int main(int argc, char *argv[]) {
 
 // Manejador de señales para SIGINT
 void sigint_handler() {
+    shared_memory_stats[DEFAULT_STRUCT_POS].existClient --;
     restore_terminal();
     fclose(file);
     // Desmapear espacio de memoria compartida
