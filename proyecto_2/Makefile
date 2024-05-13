@@ -1,12 +1,15 @@
 CC = x86_64-linux-gnu-gcc-12
 obj-m = arduino_driver.o
 KVERSION = $(shell uname -r)
+KDIR = /lib/modules/$(KVERSION)/build
 
 all:
-	make -C /lib/modules/$(KVERSION)/build M=$(PWD) modules CC=x86_64-linux-gnu-gcc-12
+	gcc main.c arduino_lib.c -o main
+	make -C $(KDIR) M=$(PWD) modules CC=$(CC)
 
 clean:
-	make -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
+	make -C $(KDIR) M=$(PWD) clean
+	rm -f main
 
 load:
 	sudo insmod arduino_driver.ko
@@ -18,7 +21,7 @@ check:
 	lsmod | grep arduino_driver
 
 lib:
-	gcc lib.c -o lib
+	gcc arduino_lib.c -o arduino_lib
 	
 run_lib:
-	sudo ./lib
+	sudo ./arduino_lib

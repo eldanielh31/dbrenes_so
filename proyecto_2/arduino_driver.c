@@ -1,112 +1,39 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/usb.h>
-#include <linux/slab.h>
-#include <linux/fs.h>
 #include <linux/uaccess.h>
+#include <linux/fs.h>
+#include <linux/mutex.h>
+#include <linux/errno.h>
+#include <linux/cdev.h>
 
-#define ARDUINO_VENDOR_ID 0x2341
-#define ARDUINO_PRODUCT_ID 0x0043
-#define ARDUINO_EP_IN 0x81 // Endpoint de entrada (lectura)
-#define ARDUINO_EP_OUT 0x02 // Endpoint de salida (escritura)
-#define MAX_BUF_SIZE 64 // Tamaño máximo del buffer de lectura/escritura
+#define ARDUINO_VENDOR_ID   0x2341 // Cambiar si es necesario
+#define ARDUINO_PRODUCT_ID  0x0043 // Cambiar si es necesario
+
+#define ARDUINO_MINOR_BASE 192
+#define BUFFER_SIZE 256
+
+static int arduino_open(struct inode *inode, struct file *file);
+static int arduino_release(struct inode *inode, struct file *file);
+static ssize_t arduino_read(struct file *file, char __user *buf, size_t count, loff_t *ppos);
+static ssize_t arduino_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos);
+
 
 static struct usb_device_id arduino_table[] = {
     { USB_DEVICE(ARDUINO_VENDOR_ID, ARDUINO_PRODUCT_ID) },
-    {},
+    {}
 };
-
 MODULE_DEVICE_TABLE(usb, arduino_table);
 
-static int arduino_open(struct inode *inode, struct file *file)
-{
-    printk(KERN_INFO "Arduino Uno device opened\n");
-    return 0;
-}
-
-static int arduino_release(struct inode *inode, struct file *file)
-{
-    printk(KERN_INFO "Arduino Uno device closed\n");
-    return 0;
-}
-
-static ssize_t arduino_read(struct file *file, char *buffer, size_t count, loff_t *offset)
-{
+struct arduino_usb {
+    struct usb_device *udev;
     struct usb_interface *interface;
-    struct usb_device *dev;
-    int retval;
-    char *data;
-    size_t read_count;
+    unsigned char bulk_in_endpointAddr;
+    unsigned char bulk_out_endpointAddr;
+    struct mutex io_mutex;
+};
 
-    // Obtener la interfaz y el dispositivo USB
-    interface = file->private_data;
-    dev = interface_to_usbdev(interface);
-
-    // Reservar memoria para el buffer de lectura
-    data = kmalloc(MAX_BUF_SIZE, GFP_KERNEL);
-    if (!data) {
-        return -ENOMEM;
-    }
-
-    // Leer desde el dispositivo USB
-    retval = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), ARDUINO_EP_IN,
-                             USB_TYPE_VENDOR | USB_DIR_IN,
-                             0, 0, data, MAX_BUF_SIZE, 1000);
-    if (retval < 0) {
-        printk(KERN_ERR "Error reading from Arduino Uno (%d)\n", retval);
-        kfree(data);
-        return retval;
-    }
-
-    // Copiar los datos al buffer del usuario
-    read_count = min_t(size_t, count, retval);
-    if (copy_to_user(buffer, data, read_count)) {
-        kfree(data);
-        return -EFAULT;
-    }
-
-    kfree(data);
-    return read_count;
-}
-
-static ssize_t arduino_write(struct file *file, const char *buffer, size_t count, loff_t *offset)
-{
-    struct usb_interface *interface;
-    struct usb_device *dev;
-    int retval;
-    char *data;
-
-    // Obtener la interfaz y el dispositivo USB
-    interface = file->private_data;
-    dev = interface_to_usbdev(interface);
-
-    // Reservar memoria para el buffer de escritura
-    data = kmalloc(count, GFP_KERNEL);
-    if (!data) {
-        return -ENOMEM;
-    }
-
-    // Copiar los datos desde el buffer del usuario
-    if (copy_from_user(data, buffer, count)) {
-        kfree(data);
-        return -EFAULT;
-    }
-
-    // Escribir en el dispositivo USB
-    retval = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), ARDUINO_EP_OUT,
-                             USB_TYPE_VENDOR | USB_DIR_OUT,
-                             0, 0, data, count, 1000);
-    if (retval < 0) {
-        printk(KERN_ERR "Error writing to Arduino Uno (%d)\n", retval);
-        kfree(data);
-        return retval;
-    }
-
-    kfree(data);
-    return count;
-}
-
-static struct file_operations fops = {
+static struct file_operations arduino_fops = {
     .owner = THIS_MODULE,
     .open = arduino_open,
     .release = arduino_release,
@@ -115,32 +42,148 @@ static struct file_operations fops = {
 };
 
 static struct usb_class_driver arduino_class = {
-    .name = "arduino%d",
-    .fops = &fops,
+    .name = "arduino_device",
+    .fops = &arduino_fops,
+    .minor_base = ARDUINO_MINOR_BASE,
 };
 
-static int arduino_probe(struct usb_interface *interface, const struct usb_device_id *id)
+static int arduino_open(struct inode *inode, struct file *file)
 {
+    return 0;
+}
+
+static int arduino_release(struct inode *inode, struct file *file)
+{
+    return 0;
+}
+
+static ssize_t arduino_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+{
+    struct arduino_usb *dev;
     int retval;
+    unsigned long missing;
+    unsigned int read_cnt;
+    char *kernel_buf;
 
-    printk(KERN_INFO "Arduino Uno device (%04X:%04X) plugged\n", id->idVendor, id->idProduct);
+    dev = usb_get_intfdata(file->private_data);
 
-    // Registrar el dispositivo como un dispositivo de clase USB
-    retval = usb_register_dev(interface, &arduino_class);
+    if (!mutex_trylock(&dev->io_mutex))
+        return -EBUSY;
+
+    kernel_buf = kmalloc(BUFFER_SIZE, GFP_KERNEL);
+    if (!kernel_buf) {
+        mutex_unlock(&dev->io_mutex);
+        return -ENOMEM;
+    }
+
+    retval = usb_bulk_msg(dev->udev, usb_rcvbulkpipe(dev->udev, dev->bulk_in_endpointAddr),
+                          kernel_buf, min_t(size_t, count, BUFFER_SIZE), &read_cnt, 5000);
+
     if (retval) {
-        printk(KERN_ERR "Error registering Arduino Uno device (%d)\n", retval);
+        kfree(kernel_buf);
+        mutex_unlock(&dev->io_mutex);
         return retval;
     }
 
-    return 0;
+    missing = copy_to_user(buf, kernel_buf, read_cnt);
+    kfree(kernel_buf);
+    mutex_unlock(&dev->io_mutex);
+
+    return read_cnt - missing;
+}
+
+static ssize_t arduino_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+{
+    struct arduino_usb *dev;
+    int retval;
+    unsigned long missing;
+    char *kernel_buf;
+
+    dev = usb_get_intfdata(file->private_data);
+
+    if (!mutex_trylock(&dev->io_mutex))
+        return -EBUSY;
+
+    kernel_buf = kmalloc(BUFFER_SIZE, GFP_KERNEL);
+    if (!kernel_buf) {
+        mutex_unlock(&dev->io_mutex);
+        return -ENOMEM;
+    }
+
+    missing = copy_from_user(kernel_buf, buf, count);
+    if (missing) {
+        kfree(kernel_buf);
+        mutex_unlock(&dev->io_mutex);
+        return -EFAULT;
+    }
+
+    retval = usb_bulk_msg(dev->udev, usb_sndbulkpipe(dev->udev, dev->bulk_out_endpointAddr),
+                          kernel_buf, min_t(size_t, count, BUFFER_SIZE), NULL, 5000);
+
+    kfree(kernel_buf);
+    mutex_unlock(&dev->io_mutex);
+
+    return (retval < 0) ? retval : count;
+}
+
+static int arduino_probe(struct usb_interface *interface, const struct usb_device_id *id)
+{
+    struct usb_device *udev = interface_to_usbdev(interface);
+    struct arduino_usb *dev;
+    struct usb_host_interface *iface_desc;
+    struct usb_endpoint_descriptor *endpoint;
+    int retval = -ENOMEM;
+
+    dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+    if (!dev) {
+        dev_err(&interface->dev, "Memoria insuficiente\n");
+        return retval;
+    }
+
+    mutex_init(&dev->io_mutex);
+    dev->udev = usb_get_dev(udev);
+    dev->interface = interface;
+    iface_desc = interface->cur_altsetting;
+
+    for (int i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+        endpoint = &iface_desc->endpoint[i].desc;
+        if (!dev->bulk_in_endpointAddr && usb_endpoint_is_bulk_in(endpoint))
+            dev->bulk_in_endpointAddr = endpoint->bEndpointAddress;
+        if (!dev->bulk_out_endpointAddr && usb_endpoint_is_bulk_out(endpoint))
+            dev->bulk_out_endpointAddr = endpoint->bEndpointAddress;
+    }
+
+    if (!(dev->bulk_in_endpointAddr && dev->bulk_out_endpointAddr)) {
+        dev_err(&interface->dev, "Endpoints no encontrados\n");
+        kfree(dev);
+        return -ENODEV;
+    }
+
+    usb_set_intfdata(interface, dev);
+
+    retval = usb_register_dev(interface, &arduino_class);
+    if (retval) {
+        dev_err(&interface->dev, "No se pudo registrar el dispositivo\n");
+        usb_set_intfdata(interface, NULL);
+        kfree(dev);
+    } else {
+        dev_info(&interface->dev, "Dispositivo registrado\n");
+    }
+
+    return retval;
 }
 
 static void arduino_disconnect(struct usb_interface *interface)
 {
-    printk(KERN_INFO "Arduino Uno device unplugged\n");
+    struct arduino_usb *dev;
 
-    // Eliminar el dispositivo de clase USB
+    dev = usb_get_intfdata(interface);
     usb_deregister_dev(interface, &arduino_class);
+
+    usb_put_dev(dev->udev);
+    kfree(dev);
+
+    dev_info(&interface->dev, "Dispositivo desconectado\n");
 }
 
 static struct usb_driver arduino_driver = {
@@ -152,29 +195,17 @@ static struct usb_driver arduino_driver = {
 
 static int __init arduino_init(void)
 {
-    int retval;
-
-    // Inicializar el driver USB
-    retval = usb_register(&arduino_driver);
-    if (retval) {
-        printk(KERN_ERR "Error registering Arduino Uno USB driver (%d)\n", retval);
-        return retval;
-    }
-
-    printk(KERN_INFO "Arduino Uno USB driver loaded\n");
-    return 0;
+    return usb_register(&arduino_driver);
 }
 
 static void __exit arduino_exit(void)
 {
-    // Deregistrar el driver USB
     usb_deregister(&arduino_driver);
-    printk(KERN_INFO "Arduino Uno USB driver unloaded\n");
 }
 
 module_init(arduino_init);
 module_exit(arduino_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Arduino Uno USB Driver");
+MODULE_AUTHOR("Tu nombre");
+MODULE_DESCRIPTION("Driver para Arduino Uno");
