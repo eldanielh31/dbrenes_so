@@ -18,7 +18,11 @@ unload:
 	sudo rmmod arduino_driver
 
 check:
-	lsmod | grep arduino_driver
+	lsusb
+	lsusb -t
+
+kernel:
+	sudo dmesg
 
 lib:
 	gcc arduino_lib.c -o arduino_lib
