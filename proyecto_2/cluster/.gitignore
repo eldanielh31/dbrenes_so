@@ -1,0 +1,9 @@
+# Archivos binarios compilados
+*.o
+*.obj
+*.elf
+*.exe
+*.out
+*.so
+
+mpi_master_slave*
