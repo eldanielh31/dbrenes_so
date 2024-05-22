@@ -4,7 +4,6 @@ KVERSION = $(shell uname -r)
 KDIR = /lib/modules/$(KVERSION)/build
 
 all:
-	gcc main.c arduino_lib.c -o main
 	make -C $(KDIR) M=$(PWD) modules CC=$(CC)
 
 clean:
