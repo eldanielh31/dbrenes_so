@@ -16,15 +16,20 @@ load:
 unload:
 	sudo rmmod arduino_driver
 
+unload_default:
+	sudo rmmod cdc_acm
+
 check:
-	lsusb
-	lsusb -t
+	watch -n 2 lsusb -t
+
+port:
+	lsusb -v -d 2341:0043
 
 kernel:
-	sudo dmesg
+	sudo dmesg -w
 
-lib:
-	gcc arduino_lib.c -o arduino_lib
+comp:
+	gcc -o send_message send_message.c arduino_lib.c
 	
-run_lib:
-	sudo ./arduino_lib
+run:
+	sudo ./send_message
