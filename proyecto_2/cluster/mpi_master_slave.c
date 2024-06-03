@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <mpi.h>
+#include "../driver/arduino_lib.h"
 
 #define TAG 0
 #define MAX_WORD_LEN 100
@@ -148,6 +149,17 @@ int main(int argc, char *argv[]) {
         // Imprimir la palabra más repetida
         if (final_num_words > 0) {
             printf("La palabra más repetida es: %s (frecuencia: %d)\n", final_counts[0].word, final_counts[0].count);
+
+            if (rank == 0) {
+
+                int result = send_to_arduino(final_counts[0].word);
+                if (result < 0) {
+                    printf("Failed to send message to Arduino\n");
+                } else {
+                    printf("Message sent successfully\n");
+                }
+            }
+
         } else {
             printf("No se encontraron palabras.\n");
         }

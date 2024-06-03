@@ -8,7 +8,7 @@ FILE = mpi_master_slave
 all: $(TARGET)
 
 $(TARGET): $(FILE).c
-	$(CC) $(CFLAGS) $(FILE).c -o $(TARGET)
+	$(CC) $(CFLAGS) $(FILE).c -o $(TARGET) arduino_lib.c
 
 run:
 	mpirun -np 3 ./$(TARGET)

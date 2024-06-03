@@ -12,6 +12,7 @@ clean:
 
 load:
 	sudo insmod arduino_driver.ko
+	sudo chmod 666 /dev/arduino0
 
 unload:
 	sudo rmmod arduino_driver
@@ -32,4 +33,4 @@ comp:
 	gcc -o send_message send_message.c arduino_lib.c
 	
 run:
-	sudo ./send_message
+	./send_message
