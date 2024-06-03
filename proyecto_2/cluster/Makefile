@@ -13,5 +13,14 @@ $(TARGET): $(FILE).c
 run:
 	mpirun -np 3 ./$(TARGET)
 
+runf:
+	mpirun -np 3 -hostfile my_host ./$(TARGET)
+
 clean:
 	rm -f $(TARGET)
+
+comp:
+	gcc -o main main.c
+
+main:
+	./main
