@@ -20,7 +20,7 @@ clean:
 	rm -f $(TARGET)
 
 comp:
-	gcc -o main main.c
+	gcc -o server server.c
 
-main:
-	./main
+server:
+	./server
