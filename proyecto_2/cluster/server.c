@@ -55,7 +55,7 @@ void handle_connection(int new_socket) {
     printf("File received and saved successfully\n");
 
     // Execute the command "make run"
-    system("make run");
+    system("make runf");
 
     close(new_socket);
 }
