@@ -1,0 +1,1 @@
+savedcmd_/home/daniel/src/dbrenes_so/proyecto_2/driver/modules.order := {   echo /home/daniel/src/dbrenes_so/proyecto_2/driver/arduino_driver.o; :; } > /home/daniel/src/dbrenes_so/proyecto_2/driver/modules.order
